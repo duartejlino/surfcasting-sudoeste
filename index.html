@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#123f46">
+  <meta name="description" content="Planner explicável de surfcasting entre Santo André e Vila Nova de Milfontes.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg">
+  <link rel="stylesheet" href="styles.css">
+  <title>Surfcasting Sudoeste</title>
+</head>
+<body>
+<header class="topbar">
+  <div><h1>Surfcasting Sudoeste</h1><p>Previsão explicável • Santo André → Milfontes</p></div>
+  <div class="top-actions"><span id="dataStamp" class="stamp">—</span><button id="importForecastBtn" class="secondary">Importar atualização IA</button><input id="forecastFile" type="file" accept="application/json,.json" hidden></div>
+</header>
+<nav class="tabs" aria-label="Secções">
+  <button class="tab active" data-tab="dashboard">Resumo</button>
+  <button class="tab" data-tab="calendar">Calendário</button>
+  <button class="tab" data-tab="reasoning">Raciocínio</button>
+  <button class="tab" data-tab="beaches">Praias</button>
+  <button class="tab" data-tab="history">Histórico</button>
+  <button class="tab" data-tab="insights">Aprendizagem</button>
+  <button class="tab" data-tab="about">Modelo</button>
+</nav>
+<main>
+<section id="dashboard" class="panel active-panel">
+  <div id="status" class="status">A carregar dados…</div>
+  <div class="hero card"><div class="eyebrow">MELHOR OPORTUNIDADE</div><h2 id="bestTitle">—</h2><div class="hero-meta"><span id="bestScore" class="score-pill">—</span><span id="bestConfidence" class="confidence-pill">—</span><span id="bestWhen">—</span></div><p id="bestReason"></p><button id="openBestReason" class="link-btn">Ver todo o raciocínio →</button></div>
+  <div class="stats-grid"><div class="card stat"><span>Saídas</span><strong id="statTrips">0</strong></div><div class="card stat"><span>Capturas</span><strong id="statFish">0</strong></div><div class="card stat"><span>Melhor praia real</span><strong id="statBeach">Sem dados</strong></div><div class="card stat"><span>Melhor período real</span><strong id="statPeriod">Sem dados</strong></div></div>
+  <div class="card"><h3>Top oportunidades</h3><div id="topOpportunities" class="opportunities"></div></div>
+</section>
+
+<section id="calendar" class="panel">
+  <div class="controls card"><label>Espécie alvo<select id="speciesSelect"><option>Geral</option><option>Robalo</option><option>Sargo</option><option>Dourada</option></select></label><label>Dia<select id="dateSelect"></select></label></div>
+  <div class="card"><h3>Praias × períodos do dia</h3><p class="muted">Cada célula já inclui fundo, profundidade, mar, vento, maré, luz, histórico 72 h e restantes fatores. Toca numa nota para abrir a explicação.</p><div class="table-wrap"><table id="calendarTable"><thead><tr><th>Praia</th><th>Madrugada</th><th>Amanhecer</th><th>Manhã</th><th>Tarde</th><th>Anoitecer</th><th>Noite</th></tr></thead><tbody></tbody></table></div></div>
+</section>
+
+<section id="reasoning" class="panel">
+  <div class="controls card"><label>Praia<select id="reasonBeach"></select></label><label>Data<select id="reasonDate"></select></label><label>Período<select id="reasonPeriod"></select></label><label>Espécie<select id="reasonSpecies"><option>Geral</option><option>Robalo</option><option>Sargo</option><option>Dourada</option></select></label></div>
+  <div class="detail-grid"><div class="card"><div class="eyebrow">NOTA FINAL</div><div class="big-score" id="reasonScore">—</div><div id="reasonConfidence" class="confidence-line">—</div><p id="reasonSummary"></p><div class="callout"><strong>Porque não é 10/10</strong><div id="whyNot10"></div></div></div><div class="card"><h3>O que faria a nota mudar?</h3><div id="sensitivities" class="sensitivities"></div></div></div>
+  <div class="card"><h3>Contributo fator a fator</h3><p class="muted">Impacto = nota do fator × peso. Podes ver o dado, peso, fonte, confiança e justificação individual.</p><div id="factorList" class="factor-list"></div></div>
+</section>
+
+<section id="beaches" class="panel"><div class="controls card"><label>Praia<select id="beachSelect"></select></label></div><div id="beachGuide" class="beach-guide"></div></section>
+
+<section id="history" class="panel">
+  <div class="card"><h3>Registar saída</h3><p class="muted">O histórico é o que permite corrigir o modelo com os teus resultados reais. A saída guarda também o snapshot da previsão usada naquele momento.</p>
+    <form id="historyForm" class="form-grid">
+      <label>Data<input id="hDate" type="date" required></label><label>Praia<select id="hBeach"></select></label><label>Período<select id="hPeriod"></select></label><label>Espécie<select id="hSpecies"><option>Robalo</option><option>Sargo</option><option>Dourada</option><option>Outra</option></select></label>
+      <label>Capturas<input id="hCatches" type="number" min="0" value="0"></label><label>Toques<input id="hBites" type="number" min="0" value="0"></label><label>Maior peixe (kg)<input id="hWeight" type="number" min="0" step="0.01"></label><label>Avaliação<select id="hRating"><option value="1">1 — Muito fraco</option><option value="2">2 — Fraco</option><option value="3" selected>3 — Razoável</option><option value="4">4 — Bom</option><option value="5">5 — Excelente</option></select></label>
+      <label>Isco<input id="hBait" type="text" placeholder="Ex.: lingueirão"></label><label>Montagem<input id="hRig" type="text" placeholder="Ex.: 1 anzol, estralho 1,5 m"></label><label class="wide">Leitura real do pesqueiro<textarea id="hNotes" rows="3" placeholder="Canal, banco, cor da água, distância, corrente, onde houve toques…"></textarea></label>
+      <div class="wide snapshot" id="historySnapshot"></div>
+      <div class="wide actions"><button class="primary" type="submit">Guardar saída</button><button type="button" id="exportHistory">Exportar histórico para ChatGPT</button><button type="button" id="exportCsv">CSV</button><label class="file-btn">Importar histórico<input id="importHistory" type="file" accept="application/json,.json"></label></div>
+    </form><div id="historyMsg" class="muted"></div>
+  </div>
+  <div class="card"><div class="table-wrap"><table id="historyTable"><thead><tr><th>Data</th><th>Praia</th><th>Período</th><th>Espécie</th><th>Capturas</th><th>Previsto</th><th>Real</th><th>Isco</th><th></th></tr></thead><tbody></tbody></table></div></div>
+</section>
+
+<section id="insights" class="panel"><div class="card"><h3>Aprendizagem com as tuas pescarias</h3><p id="insightHeadline">Ainda não há dados suficientes.</p></div><div class="insight-grid"><div class="card"><h3>Por praia</h3><div id="beachInsights"></div></div><div class="card"><h3>Por período</h3><div id="periodInsights"></div></div><div class="card"><h3>Condições das capturas</h3><div id="conditionInsights"></div></div><div class="card"><h3>Previsão vs realidade</h3><div id="modelInsights"></div></div></div></section>
+
+<section id="about" class="panel"><div class="card prose"><h3>Princípio do motor</h3><p>A app não tenta esconder a fórmula. O ficheiro de previsão contém, para cada praia × período × espécie, a nota de cada fator, o peso, o impacto, a fonte, a confiança e uma justificação escrita.</p><p>O ChatGPT pode gerar um novo <code>forecast.json</code> com dados atualizados e o mesmo formato. A app apenas apresenta esse raciocínio. Assim conseguimos melhorar o modelo sem reescrever a interface.</p><h3>Atualização por IA</h3><p>Enquanto a publicação automática não estiver ligada, usa <strong>Importar atualização IA</strong>. Depois de me enviares o histórico, eu posso devolver um novo pacote de previsão já recalibrado.</p><h3>Pesos atuais</h3><div id="weightsList"></div><h3>Limitações assumidas</h3><ul><li>Bancos e canais de areia são dinâmicos e não são observados automaticamente.</li><li>A maré modelada serve para planeamento de pesca, não substitui a tabela oficial para segurança.</li><li>A confiança é mostrada separadamente da nota para não fingir precisão.</li></ul></div></section>
+</main>
+<footer>Surfcasting Sudoeste • motor explicável • confirma sempre as condições e a segurança no local.</footer>
+<script src="app.js"></script>
+</body></html>
