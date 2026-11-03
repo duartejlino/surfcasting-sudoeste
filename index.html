@@ -33,8 +33,26 @@
 </section>
 
 <section id="calendar" class="panel">
-  <div class="controls card"><label>Espécie alvo<select id="speciesSelect"><option>Geral</option><option>Robalo</option><option>Sargo</option><option>Dourada</option></select></label><label>Dia<select id="dateSelect"></select></label></div>
-  <div class="card"><h3>Praias × períodos do dia</h3><p class="muted">Cada célula já inclui fundo, profundidade, mar, vento, maré, luz, histórico 72 h e restantes fatores. Toca numa nota para abrir a explicação.</p><div class="table-wrap"><table id="calendarTable"><thead><tr><th>Praia</th><th>Madrugada</th><th>Amanhecer</th><th>Manhã</th><th>Tarde</th><th>Anoitecer</th><th>Noite</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="controls card calendar-controls">
+    <label>Vista<select id="calendarView"><option value="day">Dia</option><option value="month">Mês</option></select></label>
+    <label>Espécie alvo<select id="speciesSelect"><option>Geral</option><option>Robalo</option><option>Sargo</option><option>Dourada</option></select></label>
+    <label class="day-control">Dia<select id="dateSelect"></select></label>
+    <label class="month-control" hidden>Mês<select id="monthSelect"></select></label>
+    <label class="month-control" hidden>Período<select id="monthPeriodSelect"><option value="AUTO">Automático — melhor período</option><option>Madrugada</option><option>Amanhecer</option><option>Manhã</option><option>Tarde</option><option>Anoitecer</option><option>Noite</option></select></label>
+    <label class="month-control" hidden>Praia<select id="monthBeachSelect"><option value="ALL">Todas — melhor praia</option></select></label>
+  </div>
+  <div id="dayCalendarCard" class="card">
+    <h3>Praias × períodos do dia</h3>
+    <p class="muted">A grelha mostra logo a nota e as variáveis principais: mar, período/direção, vento, maré, temperatura, estado das 72 h anteriores e confiança. Toca numa célula apenas quando quiseres abrir a justificação escrita completa.</p>
+    <div class="calendar-legend"><span>Mar = altura offshore</span><span>72h = estado recente do mar</span><span>C = confiança da análise</span></div>
+    <div class="table-wrap"><table id="calendarTable"><thead><tr><th>Praia</th><th>Madrugada</th><th>Amanhecer</th><th>Manhã</th><th>Tarde</th><th>Anoitecer</th><th>Noite</th></tr></thead><tbody></tbody></table></div>
+  </div>
+  <div id="monthCalendarCard" class="card" hidden>
+    <div class="month-heading"><div><h3 id="monthTitle">Vista mensal</h3><p id="monthDescription" class="muted"></p></div><div class="month-key"><span>Nota</span><span>Praia</span><span>Período</span><span>Mar / vento / maré</span></div></div>
+    <div class="month-scroll"><div class="month-weekdays"><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span></div>
+    <div id="monthGrid" class="month-grid"></div></div>
+    <p class="muted month-note">Os dias fora do horizonte disponível ficam como “sem previsão”; não são preenchidos por estimativa.</p>
+  </div>
 </section>
 
 <section id="reasoning" class="panel">
