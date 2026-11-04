@@ -11,3 +11,83 @@
 
 /* Calendário v3.3: comparação traduzida para decisão de pesca */
 .technical-tie{grid-column:1/-1;border:1px solid #d6dfdc;background:#f4f7f6;border-radius:12px;padding:10px 12px;color:var(--text);font-size:13px}.technical-tie strong{color:var(--accent)}.fish-choice,.fish-target,.fish-today,.fish-watch{margin:9px 0;padding-top:8px;border-top:1px solid #edf1f0}.fish-choice b,.fish-target b,.fish-today b,.fish-watch b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px}.fish-choice b{color:var(--accent)}.fish-target b{color:var(--good)}.fish-today b{color:#6b5b18}.fish-watch b{color:var(--bad)}.fish-choice p,.fish-target p,.fish-today p,.fish-watch p{margin:0;font-size:12px;line-height:1.45}.compare-wrap td small{line-height:1.45;margin-top:5px;max-width:270px}.compare-card .link-btn{margin-top:6px}
+
+
+/* V4 · Mar Sudoeste / atividades */
+[hidden]{display:none !important}
+.activity-intro{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin:5px 0 16px}
+.activity-intro h2{font-size:clamp(21px,3vw,30px);margin:3px 0 4px}
+.activity-intro p{max-width:770px;margin:0;color:var(--muted)}
+.activity-model-label{font-weight:700;font-size:11px;border:1px solid var(--border);background:#fff;border-radius:99px;padding:6px 10px;white-space:normal;text-align:center;max-width:180px}
+.activity-notice{font-size:12px;color:#5c6366;background:#edf2f2;border:1px solid var(--border);border-radius:11px;padding:10px 13px;margin:0 0 13px}
+.activity-controls label{min-width:145px;flex:1 1 145px}
+.activity-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.activity-option{border:1px solid var(--border);background:var(--card);border-radius:16px;padding:15px;min-width:0}
+.activity-selected{border-color:#52979d;box-shadow:0 0 0 1px #7bb6b5 inset}
+.activity-caution{border-left:4px solid #9c613e}
+.activity-card-head{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;min-width:0}
+.activity-card-head>div:first-child{min-width:0}
+.activity-card-head h3{margin:2px 0;font-size:18px}
+.activity-card-head p{margin:0;font-size:12px;line-height:1.45}
+.activity-card-score{text-align:right;min-width:74px;font-size:26px;font-weight:850;color:var(--accent);line-height:1.2}
+.activity-card-score small{display:block;font-size:10px;font-weight:600;color:var(--muted)}
+.activity-unrated{display:inline-block;font-size:12px;border:1px dashed #ad8661;color:#7b552a;padding:5px;border-radius:8px;font-weight:800}
+.activity-state{display:inline-block;margin-top:10px;background:#f0f4f3;border-radius:7px;padding:4px 8px;font-size:11px;font-weight:700;color:#4e6267}
+.activity-brief{font-size:13px;margin:10px 0;color:var(--text);line-height:1.55}
+.activity-facts{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.activity-facts span{font-size:11px;border:1px solid #e2e9e6;background:#fafbfb;border-radius:7px;padding:4px 7px}
+.activity-risk{border-left:3px solid #bc9878;background:#fbf7f0;padding:9px 10px;font-size:12px;border-radius:4px;margin:9px 0}
+.activity-card-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.activity-compare-toggle,.compare-toggle{border:1px solid #98c0be;color:#176b72;font-weight:800;background:#eef7f6;border-radius:9px;padding:9px 12px;min-height:42px;cursor:pointer}
+.activity-compare-toggle.chosen,.compare-toggle.chosen{border-color:var(--accent);color:white;background:var(--accent)}
+.activity-explain{margin-top:10px;border-top:1px solid #e9efed;padding-top:8px}
+.activity-explain summary{font-weight:800;cursor:pointer;color:var(--accent);padding:5px 0;list-style:disclosure-closed}
+.activity-explain[open] summary{list-style:disclosure-open}
+.activity-explain h4{font-size:12px;margin:12px 0 4px}
+.activity-explain ul{padding-left:19px;font-size:12px;margin:3px 0 10px}
+.activity-explain li{margin:5px 0}
+.activity-explain p{font-size:12px}
+.activity-compare-box{margin-bottom:12px}
+.activity-compare-box h3{margin:0 0 4px}
+.activity-compare-box p{margin:0 0 10px}
+.activity-table{width:100%;border-collapse:collapse;min-width:760px}
+.activity-table th,.activity-table td{vertical-align:top;min-width:140px}
+.activity-table th:first-child,.activity-table td:first-child{min-width:180px}
+.activity-table small{display:block;font-size:11px;color:var(--muted);line-height:1.5;margin-top:5px}
+.activity-safety{margin-top:12px;background:#fbfcfb}
+.activity-safety h3{margin:0}
+.activity-safety p{font-size:13px;max-width:1000px}
+.activity-links{display:flex;gap:9px;flex-wrap:wrap}
+.activity-links a{font-size:12px;color:var(--accent);text-decoration:underline}
+.compare-selected{border-color:var(--accent)}
+.compare-card-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:6px}
+.compare-card-actions .link-btn{white-space:normal;text-align:left}
+.insight-select{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+.insight-select select{min-height:40px;border:1px solid var(--border);border-radius:9px;padding:7px;background:#fff;color:var(--text)}
+button:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #338c92;outline-offset:2px}
+@media(max-width:760px){.activity-grid{grid-template-columns:1fr}.activity-intro{display:block}.activity-model-label{display:inline-block;margin-top:10px;max-width:none}.activity-controls label{min-width:calc(50% - 12px)}}
+@media(max-width:420px){.activity-controls label{min-width:100%}.activity-card-head h3{font-size:17px}}
+
+@media(max-width:420px){.activity-controls label{min-width:calc(50% - 10px);flex:1 1 calc(50% - 10px)}.activity-controls select{font-size:13px}}
+
+/* v4.1 — ampliacao das marés e informação por atividade */
+.tide-sheet{margin:14px 0;padding:12px 16px}.tide-sheet summary{cursor:pointer;font-weight:700;min-height:38px;padding-top:8px}.tide-sheet[open] summary{margin-bottom:12px}.activity-facts span:last-child{max-width:100%;white-space:normal}.activity-risk{line-height:1.45}
+
+/* v4.2 — fonte e atualização sem ocupar o calendário */
+.live-data-box{display:flex;justify-content:space-between;align-items:start;gap:1.5rem;margin-bottom:1rem}
+.live-data-box>div:first-child{flex:1;min-width:0}
+.live-data-box h3{margin:.3rem 0}
+.live-data-box p{line-height:1.45;margin:.4rem 0}
+.live-actions{flex:0 0 220px;max-width:270px}
+.live-actions button{width:100%;margin-bottom:.55rem}
+.live-actions button:disabled{opacity:.6;cursor:wait}
+#sourceAudit .activity-table td,#sourceAudit .activity-table th{white-space:normal;min-width:100px}
+#sourceAudit .activity-table td:first-child{min-width:175px}
+#sourceAudit details summary{cursor:pointer;font-weight:700}
+@media(max-width:680px){.live-data-box{display:block}.live-actions{max-width:none;margin-top:.8rem}#sourceAudit .table-wrap{overflow:auto}}
+
+/* v4.3 - modo manual ChatGPT */
+.manual-data-box{border-color:#bed2cf;background:linear-gradient(135deg,#fff 0%,#f7faf9 100%)}
+.manual-data-box code{background:#eaf1ef;border-radius:4px;padding:1px 5px}
+.manual-forecast-warning{color:#9a3e3e;font-weight:700}
+@media(max-width:680px){.manual-data-box .live-actions{width:100%}}

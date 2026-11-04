@@ -1,25 +1,59 @@
-# Contrato de atualização pela IA
+# Contrato da atualização manual ChatGPT → Mar Sudoeste v4.3
 
-O ficheiro `data/forecast.json` é a fronteira entre o motor de análise e a app.
+## Ficheiro
 
-## Regras
+- JSON UTF-8 (`forecast.json`), `schema_version`: `3`, `generated_at` ISO 8601 com fuso.
+- `area`, `generator` e notas de limitações/intervalo de previsão.
+- `beaches`: dicionário de locais com IDs imutáveis, coordenadas e descrições.
+- `evaluations`: resultados **pré-calculados** para surfcasting, cada objeto com `date` ISO, `beach_id`, `period`, `species` (Geral, Robalo, Sargo, Dourada), `window`, `score` (0–10), `confidence` (0–100), `summary`, `why_not_10`, `conditions`, `factors` e `sensitivities`. Cada fator deve ter `id`, `label`, `value`, `unit`, `score`, `weight`, `impact`, `source`, `confidence` e `reason`. A soma dos pesos = 1, salvo ajuste explicitamente declarado e contabilizado.
+- `activity_evaluations`: lista de resultados pré-calculados **para surf, spinning, caça submarina e ir à maré**. Não incluir surfcasting aqui, pois já usa `evaluations`. A chave lógica é `(date, activity, beach_id, period, surf_level se activity=surf)`. Para surf gerar os níveis `iniciante`, `intermedio`, `experiente`. Cada objeto contém pelo menos:
 
-- `schema_version` deve ser `3`.
-- Cada combinação relevante deve existir em `evaluations`.
-- Uma avaliação tem `date`, `beach_id`, `period`, `species`, `score`, `confidence`, `summary`, `why_not_10`, `factors`, `sensitivities` e `conditions`.
-- `score` é 0–10.
-- `confidence` é 0–100 e mede qualidade/concordância dos dados, não qualidade da pesca.
-- Cada fator contém `score`, `weight`, `impact`, `reason`, `source` e `confidence`.
-- Os pesos de todos os fatores devem somar 1,00.
-- Nenhuma alteração de pesos deve ser silenciosa: a atualização deve explicar por que mudou e manter registo na análise.
+```json
+{
+  "date": "2026-11-05",
+  "activity": "spinning",
+  "beach_id": "aivados",
+  "period": "Amanhecer",
+  "window": "06:30–08:20",
+  "score": 7.6,
+  "potential": 7.6,
+  "confidence": 64,
+  "status": "Potencial ambiental condicionado",
+  "risky": false,
+  "observation": "Mar e vento modelados, não observados no local",
+  "origin": "modelo na coordenada",
+  "source": "Centros/modelos efetivamente consultados",
+  "reasons": ["Porque esta combinação pode favorecer a atividade"],
+  "limits": ["Acesso, condições reais e restrições por confirmar"],
+  "factors": [
+    {"name":"Altura da onda", "value":0.8,"unit":"m", "score":8.3,"weight":0.25,"impact":2.075,"reason":"Critério explicado e sua origem"}
+  ]
+}
+```
 
-## Histórico para recalibração
+O exemplo mostra **formato, não uma previsão observada**. A app lê `activity_evaluations` diretamente: não recalcula o score ali. Se faltarem avaliações num ficheiro com `activity_evaluations`, não fabrica as células ausentes. O ficheiro antigo incluído na instalação não tem este campo e ativa temporariamente uma fórmula local **expressamente identificada como provisória**.
 
-A app exporta `surfcasting_historico_para_chatgpt.json`. O motor deve:
+## Auditoria das fontes
 
-1. comparar previsão e avaliação real;
-2. segmentar por praia, período, espécie e condições;
-3. evitar conclusões fortes com amostras pequenas;
-4. aplicar shrinkage / regularização às correções;
-5. distinguir ausência de capturas de ausência de atividade (toques);
-6. preservar explicabilidade: qualquer correção pessoal deve aparecer como fator/ajuste identificável.
+- `source_registry`: consultas verdadeiramente realizadas, campos `requested_at` (hora da consulta), centro/modelo, endpoint/origem, coordenadas, período e resolução aplicável.
+- `source_failures`: fontes indisponíveis, respostas não obtidas ou variáveis em falta.
+- `evaluations[].source_audit`: valores **reais capturados** de cada fonte para o período selecionado, mediana/consenso quando comparáveis, dispersão e diferença para a fonte oficial. A fonte diária IPMA pode ser validação regional, mas **não pode ser tratada como medição horária independente**.
+- `factors[].evidence`: evidência por fator, com fonte, horário, variável e valor quando comprovadamente existente.
+- O mesmo centro republicado por vários websites **conta uma única vez** no consenso. Período médio, de pico e de swell não são diretamente equivalentes.
+- Não rotular extrapolação regional como medição de praia, nem usar um modelo afastado como observação local.
+
+## Marés e atividades
+
+- Considerar a Tabela de Marés de Sines, com altitude referida ao **zero hidrográfico**, horários e diferença de altura entre extrema adjacentes (amplitude). Não usar uma tabela MSL como se fosse zero hidrográfico.
+- Não atribuir nota definitiva quando faltam dados críticos de segurança; diferenciar potencial ambiental de condições seguras.
+- `samoqueira`: excluída de **surfcasting**; elegível para spinning, caça submarina e ir à maré, com acessos/restrições verificados; surf não classificado se não houver evidência de spot surfável.
+- Baixa-mar grande não significa rochas seguras. Caça submarina depende de visibilidade real, corrente, janela diurna e licenças. Apanha depende da espécie e das regras em vigor, inclusive áreas protegidas.
+- Não extrapolar mar/vento para além do horizonte real das fontes. Meses sem marés IH verificadas não recebem classificações de apanha fundamentadas em altura oficial.
+
+## Aprendizagem
+
+Usar o histórico JSON exportado da app para comparar previsões e realidade. Corrigir erros com regularização para amostras pequenas e distinguir diferenças por atividade, praia, período e espécie. Mostrar os ajustes explicitamente; não esconder alterações de pesos/versões.
+
+## Validação antes da entrega
+
+Confirmar compatibilidade do JSON, intervalo dos scores, fuso, duplicados de `(data, praia, período, espécie/atividade, nível)`, pesos, valores em falta, frescura das fontes e todas as zonas elegíveis. Fornecer JSON diretamente descarregável para **Importar atualização IA**.
