@@ -118,3 +118,9 @@ button:focus-visible,select:focus-visible,summary:focus-visible{outline:3px soli
 .research-sources p{margin:6px 0}
 .score-btn .local-chip{font-weight:600;font-size:10px;line-height:1.3;color:#32625f;max-width:180px}
 @media(max-width:630px){.research-columns{grid-template-columns:1fr}}
+
+/* v4.4.1 — leitura permanente de spots de surf aplicada a cada atividade */
+.research-surf-guide{border-top:1px solid var(--line, #d7e0e0);padding-top:1rem;margin-top:1.15rem}
+.research-surf-guide h4{margin:0 0 .65rem;font-size:1rem}
+.research-surf-guide p{margin:.4rem 0;line-height:1.5}
+.research-surf-guide .muted{font-size:.85rem}

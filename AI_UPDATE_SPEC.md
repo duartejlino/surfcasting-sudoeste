@@ -1,4 +1,4 @@
-# Contrato da atualização manual ChatGPT → Mar Sudoeste v4.3
+# Contrato da atualização manual ChatGPT → Mar Sudoeste v4.4
 
 ## Ficheiro
 
@@ -46,7 +46,7 @@ O exemplo mostra **formato, não uma previsão observada**. A app lê `activity_
 
 - Considerar a Tabela de Marés de Sines, com altitude referida ao **zero hidrográfico**, horários e diferença de altura entre extrema adjacentes (amplitude). Não usar uma tabela MSL como se fosse zero hidrográfico.
 - Não atribuir nota definitiva quando faltam dados críticos de segurança; diferenciar potencial ambiental de condições seguras.
-- `samoqueira`: excluída de **surfcasting**; elegível para spinning, caça submarina e ir à maré, com acessos/restrições verificados; surf não classificado se não houver evidência de spot surfável.
+- `samoqueira`: excluída de **surfcasting**; elegível para spinning, caça submarina e ir à maré, mas com acesso e restrições ainda a verificar; surf não classificado se não houver evidência de spot surfável.
 - Baixa-mar grande não significa rochas seguras. Caça submarina depende de visibilidade real, corrente, janela diurna e licenças. Apanha depende da espécie e das regras em vigor, inclusive áreas protegidas.
 - Não extrapolar mar/vento para além do horizonte real das fontes. Meses sem marés IH verificadas não recebem classificações de apanha fundamentadas em altura oficial.
 
@@ -57,3 +57,11 @@ Usar o histórico JSON exportado da app para comparar previsões e realidade. Co
 ## Validação antes da entrega
 
 Confirmar compatibilidade do JSON, intervalo dos scores, fuso, duplicados de `(data, praia, período, espécie/atividade, nível)`, pesos, valores em falta, frescura das fontes e todas as zonas elegíveis. Fornecer JSON diretamente descarregável para **Importar atualização IA**.
+
+## Filtro global e investigação por local
+
+O site apresenta uma única atividade de cada vez: Resumo, Calendário dia/mês, Comparação, Raciocínio, Praias, Histórico, Aprendizagem e Modelo. A lista de zonas é definida por atividade: não confundir exclusão por preferência/ausência de caracterização com interdição legal.
+
+As novas avaliações devem usar as hipóteses do ficheiro `PESQUISA_LOCAIS_ATIVIDADES.md` **apenas como contexto/priors**, nunca como medições de peixe, visibilidade, corrente na rocha ou capturas. Se uma hipótese afetar a nota, registar esse impacto como critério explícito, com fonte e incerteza.
+
+Fontes públicas de geografia local: Turismo de Portugal e guias locais; restrições DGRM, bivalves IPMA. Para qualquer captura/apneia, confirmar regras e área exata (PNSACV), nunca inferir autorização de uma previsão meteorológica.

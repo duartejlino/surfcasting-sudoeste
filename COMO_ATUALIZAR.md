@@ -14,7 +14,7 @@ Se já registaste saídas, anexa o ficheiro que descarregaste em **Histórico �
 - Toca em **Importar atualização IA**.
 - Escolhe o novo ficheiro `.json`.
 - Confirma a mensagem de importação, o período e a data da previsão mostrados na app.
-- Confere **Atividades → Raciocínio / Auditoria** para compreender os fatores e as fontes; compara praias e atividades.
+- Confere **Raciocínio → Auditoria, com a atividade escolhida no filtro global** para compreender os fatores e as fontes; compara praias e atividades.
 
 O botão **não atualiza o código do site**. Altera apenas os dados das previsões e mantém o histórico guardado localmente.
 
@@ -28,3 +28,9 @@ O botão **não atualiza o código do site**. Altera apenas os dados das previs�
 ## Novas versões da app
 
 Alterações à interface ou à estrutura da app continuam a exigir envio dos ficheiros de código para GitHub Pages. A intenção é fazê-lo raramente. As previsões normais são atualizadas apenas com o JSON.
+
+## Filtro global
+
+Selecionar **Atividade** no topo do site para alterar simultaneamente todos os separadores. O botão **Importar atualização IA** recebe o ficheiro `forecast.json`, mas não instala versões novas de `app.js` ou `index.html`.
+
+Para consultar diferenças de um local para cada atividade, escolher **Praias** e consultar a secção **Pesquisa local**: as fontes clicáveis distinguem características documentadas de hipóteses práticas.

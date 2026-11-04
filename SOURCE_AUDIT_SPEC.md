@@ -1,4 +1,4 @@
-# Auditoria das fontes — Mar Sudoeste v4.3
+# Auditoria das fontes — Mar Sudoeste v4.4
 
 **O site não consulta fontes novas.** Todos os dados e a auditoria vêm do `forecast.json` gerado quando o utilizador pede uma atualização no ChatGPT.
 
