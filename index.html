@@ -15,9 +15,14 @@
   <div><h1>Mar Sudoeste</h1><p>Surf • Pesca • Caça submarina • Marés · Santo André → Milfontes</p></div>
   <div class="top-actions"><span id="dataStamp" class="stamp">—</span><button id="importForecastBtn" class="secondary">Importar atualização IA</button><input id="forecastFile" type="file" accept="application/json,.json" hidden></div>
 </header>
+<div class="global-switch" role="group" aria-label="Atividade selecionada para toda a aplicação">
+ <label for="globalActivity"><span>ATIVIDADE</span><select id="globalActivity">
+ <option value="surfcasting">Surfcasting</option><option value="surf">Surf</option><option value="spinning">Pesca spinning</option><option value="sub">Caça submarina</option><option value="mare">Ir à maré</option></select></label>
+ <label id="surfLevelWrap" for="globalSurfLevel" hidden><span>NÍVEL DE SURF</span><select id="globalSurfLevel"><option value="iniciante">Iniciante</option><option value="intermedio" selected>Intermédio</option><option value="experiente">Experiente</option></select></label>
+ <div class="global-context" id="globalActivityContext" role="status">Todas as páginas são filtradas pela atividade escolhida.</div>
+</div>
 <nav class="tabs" aria-label="Secções">
-  <button class="tab active" data-tab="activities">Atividades</button>
-  <button class="tab" data-tab="dashboard">Surfcasting</button>
+  <button class="tab active" data-tab="dashboard">Resumo</button>
   <button class="tab" data-tab="calendar">Calendário</button>
   <button class="tab" data-tab="reasoning">Raciocínio</button>
   <button class="tab" data-tab="beaches">Praias</button>
@@ -27,65 +32,32 @@
 </nav>
 <main>
 
-<section id="activities" class="panel active-panel">
-  <div class="activity-intro"><div><div class="eyebrow">V4.3 · ANÁLISE NO CHATGPT + MARÉS OFICIAIS</div><h2>O que compensa fazer no mar?</h2><p>Compara cinco atividades com regras diferentes. A qualidade do surf não é a qualidade da pesca — e uma grande baixa-mar não significa que as rochas estejam seguras.</p></div><span class="activity-model-label">Modelo explicável · condicionado à segurança</span></div>
-  <div class="card live-data-box manual-data-box" aria-label="Previsão gerada no ChatGPT">
+<section id="dashboard" class="panel active-panel">
+  <div id="status" class="status">A carregar dados…</div>
+<div class="card live-data-box manual-data-box" aria-label="Previsão gerada no ChatGPT">
     <div><div class="eyebrow">PREVISÃO POR FICHEIRO · SEM API PAGA</div><h3>O ChatGPT analisa. A app apresenta.</h3>
       <p>Quando quiseres previsões novas, pede nesta conversa <strong>“Atualiza o Mar Sudoeste”</strong>. Eu comparo as fontes disponíveis e entrego um <code>forecast.json</code> com as notas, justificações e auditoria das fontes. Depois importas esse ficheiro aqui.</p>
       <p class="muted">Não existem consultas nem cálculos automáticos em segundo plano. A app preserva o teu histórico neste dispositivo. Marés oficiais de Sines disponíveis para novembro de 2026; segurança, acessos, visibilidade e regras locais têm sempre de ser confirmados.</p>
     </div>
     <div class="live-actions"><button type="button" class="primary" id="importForecastMainBtn">Importar forecast.json</button><p id="manualForecastStatus" role="status" class="muted">A verificar a data da previsão guardada…</p></div>
   </div>
-  <div class="controls card activity-controls">
-    <label>Vista<select id="activityView"><option value="day">Dia</option><option value="month">Mês</option></select></label>
-    <label>Atividade<select id="activityKind"><option value="ALL">Todas as atividades</option><option value="surfcasting">Surfcasting</option><option value="surf">Surf</option><option value="spinning">Pesca spinning</option><option value="sub">Caça submarina</option><option value="mare">Ir à maré</option></select></label>
-    <label class="activity-day-control">Dia<select id="activityDate"></select></label>
-    <label class="activity-month-control" hidden>Mês<select id="activityMonth"></select></label>
-    <label>Praia / zona<select id="activityBeach"><option value="ALL">Todas as zonas</option></select></label>
-    <label>Período<select id="activityPeriod"><option value="AUTO">Automático — melhor janela</option><option>Madrugada</option><option>Amanhecer</option><option>Manhã</option><option>Tarde</option><option>Anoitecer</option><option>Noite</option></select></label>
-    <label>Nível de surf<select id="activitySurfLevel"><option value="iniciante">Iniciante</option><option value="intermedio" selected>Intermédio (referência)</option><option value="experiente">Experiente</option></select></label>
-  </div>
-  <div id="activityNotice" class="activity-notice" role="status"></div>
-  <details class="card tide-sheet"><summary>Consultar baixas-mares e amplitudes oficiais de Sines (novembro inteiro)</summary><div id="officialTidesOverview"></div></details>
-  <div id="activityDayContent">
-    <div id="activityCards" class="activity-grid"></div>
-    <div class="card activity-compare-box">
-      <h3>Comparar atividades sem sair do ecrã</h3><p class="muted">Carrega em <strong>Comparar</strong> nas opções que te interessam. A tabela compara oportunidade, limitações e segurança. Para ver as explicações basta abrir <strong>Porquê?</strong> em cada cartão.</p>
-      <div id="activityCompare" class="table-wrap"></div>
-    </div>
-  </div>
-  <div id="activityMonthContent" class="card" hidden>
-    <h3 id="activityMonthTitle">Vista mensal</h3><p id="activityMonthDescription" class="muted">Mostra a melhor janela compatível com os filtros, sem inventar previsões fora do horizonte.</p>
-    <div class="month-scroll"><div class="month-weekdays"><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span></div><div id="activityMonthGrid" class="month-grid"></div></div>
-    <p class="muted">Caça submarina e ir à maré: notas ambientais condicionadas à visibilidade, rebentação, acesso e regras da zona. A maré oficial de Sines está integrada.</p>
-  </div>
-  <div class="card activity-safety">
-    <h3>Antes de entrar no mar ou ir às rochas</h3>
-    <p><strong>Segurança não é uma nota de 0 a 10.</strong> Ondas de período longo podem alcançar rochas aparentemente secas. O estado real da rebentação, acessos, correntes, visibilidade e possibilidade de saída têm de ser verificados no local. Não vás sozinho a zonas expostas.</p>
-    <p><strong>Regras:</strong> spinning/surfcasting requerem normalmente licença de pesca apeada; caça submarina requer licença própria e é proibida do pôr ao nascer do sol. A apanha lúdica manual sem utensílios pode dispensar licença, mas há restrições de espécies, quantidades, zonas e períodos. A procura de polvos, navalheiras e búzios <strong>não significa que a captura esteja autorizada</strong> naquele local e dia. No Parque Natural do Sudoeste Alentejano e Costa Vicentina existem áreas onde a pesca/apanha são interditas. Uma nota nunca significa permissão para capturar.</p>
-    <div class="activity-links"><a target="_blank" rel="noopener" href="https://dgrm.pt/pt/web/guest/licencas">DGRM · Licenças</a><a target="_blank" rel="noopener" href="https://www.dgrm.pt/zonas-de-pesca">DGRM · Zonas e proibições</a><a target="_blank" rel="noopener" href="https://www.hidrografico.pt/paginas-genericas/dt/doc/previsao-oceanografica/">IH · Tabela de marés</a><a target="_blank" rel="noopener" href="https://www.ipma.pt/pt/bivalves/zonas/">IPMA · Interdições bivalves</a></div>
-  </div>
-</section>
-
-<section id="dashboard" class="panel">
-  <div id="status" class="status">A carregar dados…</div>
   <div class="hero card"><div class="eyebrow">MELHOR OPORTUNIDADE</div><h2 id="bestTitle">—</h2><div class="hero-meta"><span id="bestScore" class="score-pill">—</span><span id="bestConfidence" class="confidence-pill">—</span><span id="bestWhen">—</span></div><p id="bestReason"></p><button id="openBestReason" class="link-btn">Ver todo o raciocínio →</button></div>
-  <div class="stats-grid"><div class="card stat"><span>Saídas</span><strong id="statTrips">0</strong></div><div class="card stat"><span>Capturas</span><strong id="statFish">0</strong></div><div class="card stat"><span>Melhor praia real</span><strong id="statBeach">Sem dados</strong></div><div class="card stat"><span>Melhor período real</span><strong id="statPeriod">Sem dados</strong></div></div>
+  <div class="stats-grid"><div class="card stat"><span>Saídas</span><strong id="statTrips">0</strong></div><div class="card stat"><span id="statOutcomeLabel">Capturas</span><strong id="statFish">0</strong></div><div class="card stat"><span>Melhor praia real</span><strong id="statBeach">Sem dados</strong></div><div class="card stat"><span>Melhor período real</span><strong id="statPeriod">Sem dados</strong></div></div>
   <div class="card"><h3>Top oportunidades</h3><div id="topOpportunities" class="opportunities"></div></div>
 </section>
 
 <section id="calendar" class="panel">
   <div class="controls card calendar-controls">
     <label>Vista<select id="calendarView"><option value="day">Dia</option><option value="month">Mês</option></select></label>
-    <label>Espécie alvo<select id="speciesSelect"><option>Geral</option><option>Robalo</option><option>Sargo</option><option>Dourada</option></select></label>
+    <label class="species-only">Espécie alvo<select id="speciesSelect"><option>Geral</option><option>Robalo</option><option>Sargo</option><option>Dourada</option></select></label>
     <label class="day-control">Dia<select id="dateSelect"></select></label>
     <label class="month-control" hidden>Mês<select id="monthSelect"></select></label>
     <label class="month-control" hidden>Período<select id="monthPeriodSelect"><option value="AUTO">Automático — melhor período</option><option>Madrugada</option><option>Amanhecer</option><option>Manhã</option><option>Tarde</option><option>Anoitecer</option><option>Noite</option></select></label>
     <label class="month-control" hidden>Praia<select id="monthBeachSelect"><option value="ALL">Todas — melhor praia</option></select></label>
   </div>
   <div id="dayCalendarCard" class="card">
-    <h3>Praias × períodos do dia</h3>
-    <p class="muted">A grelha mostra logo a nota e as variáveis principais: mar, período/direção, vento, maré, temperatura, estado das 72 h anteriores e confiança. Toca numa célula apenas quando quiseres abrir a justificação escrita completa.</p>
+    <h3>Praias × períodos do dia · atividade selecionada</h3>
+    <p class="muted">Cada célula mostra o potencial para a atividade escolhida, mar, vento, maré e limites. Toca apenas para abrir a justificação, fatores e fontes.</p>
     <div class="calendar-legend"><span>Mar = altura offshore</span><span>72h = estado recente do mar</span><span>C = confiança da análise</span></div>
     <div class="table-wrap"><table id="calendarTable"><thead><tr><th>Praia</th><th>Madrugada</th><th>Amanhecer</th><th>Manhã</th><th>Tarde</th><th>Anoitecer</th><th>Noite</th></tr></thead><tbody></tbody></table></div>
     <div class="quick-compare">
@@ -98,14 +70,14 @@
     <div class="month-heading"><div><h3 id="monthTitle">Vista mensal</h3><p id="monthDescription" class="muted"></p></div><div class="month-key"><span>Nota</span><span>Praia</span><span>Período</span><span>Mar / vento / maré</span></div></div>
     <div class="month-scroll"><div class="month-weekdays"><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span></div>
     <div id="monthGrid" class="month-grid"></div></div>
-    <p class="muted month-note">Os dias fora do horizonte disponível ficam como “sem previsão”; não são preenchidos por estimativa.</p>
+    <p class="muted month-note">O mês só mostra avaliações dentro do horizonte importado; “por validar” não significa seguro.</p>
   </div>
 </section>
 
 <section id="reasoning" class="panel">
-  <div class="controls card"><label>Praia<select id="reasonBeach"></select></label><label>Data<select id="reasonDate"></select></label><label>Período<select id="reasonPeriod"></select></label><label>Espécie<select id="reasonSpecies"><option>Geral</option><option>Robalo</option><option>Sargo</option><option>Dourada</option></select></label></div>
+  <div class="controls card"><label>Praia<select id="reasonBeach"></select></label><label>Data<select id="reasonDate"></select></label><label>Período<select id="reasonPeriod"></select></label><label class="species-only">Espécie<select id="reasonSpecies"><option>Geral</option><option>Robalo</option><option>Sargo</option><option>Dourada</option></select></label></div>
   <div class="detail-grid"><div class="card"><div class="eyebrow">NOTA FINAL</div><div class="big-score" id="reasonScore">—</div><div id="reasonConfidence" class="confidence-line">—</div><p id="reasonSummary"></p><div class="callout"><strong>Porque não é 10/10</strong><div id="whyNot10"></div></div></div><div class="card"><h3>O que faria a nota mudar?</h3><div id="sensitivities" class="sensitivities"></div></div></div>
-  <div class="card"><h3>Contributo fator a fator</h3><p class="muted">Impacto = nota do fator × peso. Podes ver o dado, peso, fonte, confiança e justificação individual.</p><div id="factorList" class="factor-list"></div></div><div class="card"><h3>Auditoria: valores por modelo</h3><p class="muted">Não são múltiplos votos de websites: são centros de previsão identificados e horários comparáveis.</p><div id="sourceAudit">Consulta a atualizar…</div></div>
+  <div class="card"><h3 id="factorHeading">Contributo fator a fator</h3><p class="muted" id="factorIntro">Impacto = nota do fator × peso. Podes ver o dado, peso, fonte, confiança e justificação individual.</p><div id="factorList" class="factor-list"></div></div><div class="card"><h3>Auditoria: valores por modelo</h3><p class="muted">Não são múltiplos votos de websites: são centros de previsão identificados e horários comparáveis.</p><div id="sourceAudit">Consulta a atualizar…</div></div>
 </section>
 
 <section id="beaches" class="panel"><div class="controls card"><label>Praia<select id="beachSelect"></select></label></div><div id="beachGuide" class="beach-guide"></div></section>
@@ -113,9 +85,9 @@
 <section id="history" class="panel">
   <div class="card"><h3>Registar saída</h3><p class="muted">O histórico é o que permite corrigir o modelo com os teus resultados reais. A saída guarda também o snapshot da previsão usada naquele momento.</p>
     <form id="historyForm" class="form-grid">
-      <label>Atividade<select id="hActivity"><option value="surfcasting">Surfcasting</option><option value="surf">Surf</option><option value="spinning">Pesca spinning</option><option value="sub">Caça submarina</option><option value="mare">Ir à maré</option></select></label><label>Data<input id="hDate" type="date" required></label><label>Praia<select id="hBeach"></select></label><label>Período<select id="hPeriod"></select></label><label id="hSpeciesWrap">Espécie<select id="hSpecies"><option>Robalo</option><option>Sargo</option><option>Dourada</option><option>Outra</option></select></label>
+      <label hidden>Atividade<select id="hActivity"><option value="surfcasting">Surfcasting</option><option value="surf">Surf</option><option value="spinning">Pesca spinning</option><option value="sub">Caça submarina</option><option value="mare">Ir à maré</option></select></label><label>Data<input id="hDate" type="date" required></label><label>Praia<select id="hBeach"></select></label><label>Período<select id="hPeriod"></select></label><label id="hSpeciesWrap">Espécie<select id="hSpecies"><option>Robalo</option><option>Sargo</option><option>Dourada</option><option>Outra</option></select></label>
       <label><span id="hCatchesLabel">Capturas</span><input id="hCatches" type="number" min="0" value="0"></label><label><span id="hBitesLabel">Toques</span><input id="hBites" type="number" min="0" value="0"></label><label><span id="hWeightLabel">Maior peixe (kg)</span><input id="hWeight" type="number" min="0" step="0.01"></label><label>Avaliação<select id="hRating"><option value="1">1 — Muito fraco</option><option value="2">2 — Fraco</option><option value="3" selected>3 — Razoável</option><option value="4">4 — Bom</option><option value="5">5 — Excelente</option></select></label>
-      <label>Isco<input id="hBait" type="text" placeholder="Ex.: lingueirão"></label><label>Montagem<input id="hRig" type="text" placeholder="Ex.: 1 anzol, estralho 1,5 m"></label><label class="wide">Leitura real do pesqueiro<textarea id="hNotes" rows="3" placeholder="Canal, banco, cor da água, distância, corrente, onde houve toques…"></textarea></label>
+      <label><span id="hBaitLabel">Isco</span><input id="hBait" type="text" placeholder="Ex.: lingueirão"></label><label><span id="hRigLabel">Montagem</span><input id="hRig" type="text" placeholder="Ex.: 1 anzol, estralho 1,5 m"></label><label class="wide"><span id="hNotesLabel">Leitura real do pesqueiro</span><textarea id="hNotes" rows="3" placeholder="Canal, banco, cor da água, distância, corrente, onde houve toques…"></textarea></label>
       <div class="wide snapshot" id="historySnapshot"></div>
       <div class="wide actions"><button class="primary" type="submit">Guardar saída</button><button type="button" id="exportHistory">Exportar histórico para ChatGPT</button><button type="button" id="exportCsv">CSV</button><label class="file-btn">Importar histórico<input id="importHistory" type="file" accept="application/json,.json"></label></div>
     </form><div id="historyMsg" class="muted"></div>
@@ -123,9 +95,9 @@
   <div class="card"><div class="table-wrap"><table id="historyTable"><thead><tr><th>Data</th><th>Atividade</th><th>Praia</th><th>Período</th><th>Espécie</th><th>Capturas</th><th>Previsto</th><th>Real</th><th>Isco</th><th></th></tr></thead><tbody></tbody></table></div></div>
 </section>
 
-<section id="insights" class="panel"><div class="card"><h3>Aprendizagem com as tuas atividades</h3><label class="insight-select">Analisar atividade <select id="insightActivity"><option value="surfcasting">Surfcasting</option><option value="surf">Surf</option><option value="spinning">Pesca spinning</option><option value="sub">Caça submarina</option><option value="mare">Ir à maré</option></select></label><p id="insightHeadline">Ainda não há dados suficientes.</p></div><div class="insight-grid"><div class="card"><h3>Por praia</h3><div id="beachInsights"></div></div><div class="card"><h3>Por período</h3><div id="periodInsights"></div></div><div class="card"><h3>Condições das capturas</h3><div id="conditionInsights"></div></div><div class="card"><h3>Previsão vs realidade</h3><div id="modelInsights"></div></div></div></section>
+<section id="insights" class="panel"><div class="card"><h3>Aprendizagem com as tuas atividades</h3><label class="insight-select" hidden> Analisar atividade <select id="insightActivity"><option value="surfcasting">Surfcasting</option><option value="surf">Surf</option><option value="spinning">Pesca spinning</option><option value="sub">Caça submarina</option><option value="mare">Ir à maré</option></select></label><p id="insightHeadline">Ainda não há dados suficientes.</p></div><div class="insight-grid"><div class="card"><h3>Por praia</h3><div id="beachInsights"></div></div><div class="card"><h3>Por período</h3><div id="periodInsights"></div></div><div class="card"><h3>Condições das capturas</h3><div id="conditionInsights"></div></div><div class="card"><h3>Previsão vs realidade</h3><div id="modelInsights"></div></div></div></section>
 
-<section id="about" class="panel"><div class="card prose"><h3>Princípio do motor</h3><p>A app não tenta esconder a fórmula. O ficheiro de previsão contém, para cada praia × período × espécie, a nota de cada fator, o peso, o impacto, a fonte, a confiança e uma justificação escrita.</p><p>O ChatGPT é o motor de análise externo: faz a recolha das fontes quando pedes uma atualização e gera um novo <code>forecast.json</code>. A app não consulta as APIs meteorológicas nem altera as pontuações por iniciativa própria. Apenas apresenta e guarda o raciocínio importado, incluindo auditoria de fontes quando o ficheiro a contém.</p><h3>Atualização por IA</h3><p>Pede nesta conversa <strong>“Atualiza o Mar Sudoeste”</strong>, descarrega o ficheiro JSON e escolhe <strong>Importar atualização IA</strong>. Para aprender com as tuas saídas, usa <strong>Histórico → Exportar histórico para ChatGPT</strong> e envia o ficheiro aqui. A importação não envia dados para nenhum servidor; o histórico fica neste navegador até o exportares.</p><h3>Pesos atuais</h3><div id="weightsList"></div><h3>Limitações assumidas</h3><ul><li>Bancos e canais de areia são dinâmicos e não são observados automaticamente.</li><li>O motor agora incorpora a tabela oficial de Sines (IH 2026) para a altura da baixa-mar, amplitude e fase da maré. A previsão regional não substitui a observação da costa nem as regras locais.</li><li>A confiança é mostrada separadamente da nota para não fingir precisão.</li></ul></div></section>
+<section id="about" class="panel"><div class="card prose"><h3>Princípio do motor</h3><p>O filtro de atividade no topo aplica-se ao Resumo, Calendário, Comparação, Raciocínio, Praias, Histórico e Aprendizagem. Cada atividade tem critérios diferentes; a mesma nota numérica não implica que a atividade seja segura.</p><p>O ChatGPT é o motor de análise externo: faz a recolha das fontes quando pedes uma atualização e gera um novo <code>forecast.json</code>. A app não consulta as APIs meteorológicas nem altera as pontuações por iniciativa própria. Apenas apresenta e guarda o raciocínio importado, incluindo auditoria de fontes quando o ficheiro a contém.</p><h3>Atualização por IA</h3><p>Pede nesta conversa <strong>“Atualiza o Mar Sudoeste”</strong>, descarrega o ficheiro JSON e escolhe <strong>Importar atualização IA</strong>. Para aprender com as tuas saídas, usa <strong>Histórico → Exportar histórico para ChatGPT</strong> e envia o ficheiro aqui. A importação não envia dados para nenhum servidor; o histórico fica neste navegador até o exportares.</p><h3>Pesos atuais da atividade escolhida</h3><div id="weightsList"></div><details class="tide-sheet" id="tideDetails"><summary>Marés oficiais de Sines · novembro 2026</summary><div id="officialTidesOverview"></div></details><div class="activity-safety"><h3>Segurança e legalidade</h3><p>As notas são potencial ambiental, nunca autorização nem garantia de condições seguras. Visibilidade debaixo de água, correntes, acessos às rochas, zonas protegidas, licenças e regras de apanha têm de ser confirmadas no local e junto das autoridades competentes. Nunca uses uma nota para justificar entrada numa zona exposta.</p><div class="activity-links"><a target="_blank" rel="noopener" href="https://dgrm.pt/pt/web/guest/licencas">DGRM · Licenças</a><a target="_blank" rel="noopener" href="https://www.dgrm.pt/zonas-de-pesca">DGRM · Restrições de zonas</a></div></div><h3>Limitações assumidas</h3><ul><li>Bancos e canais de areia são dinâmicos e não são observados automaticamente.</li><li>O motor agora incorpora a tabela oficial de Sines (IH 2026) para a altura da baixa-mar, amplitude e fase da maré. A previsão regional não substitui a observação da costa nem as regras locais.</li><li>A confiança é mostrada separadamente da nota para não fingir precisão.</li></ul></div></section>
 </main>
 <footer>Mar Sudoeste • previsões indicativas • confirma segurança, maré e permissões no local.
   <div>Previsões oceanográficas via <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">Open-Meteo Marine</a>: NOAA/NCEP GFS Wave, ECMWF WAM e DWD EWAM.
