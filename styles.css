@@ -124,3 +124,6 @@ button:focus-visible,select:focus-visible,summary:focus-visible{outline:3px soli
 .research-surf-guide h4{margin:0 0 .65rem;font-size:1rem}
 .research-surf-guide p{margin:.4rem 0;line-height:1.5}
 .research-surf-guide .muted{font-size:.85rem}
+
+/* Catálogo de praias v4.5 */
+.spot-catalog-explainer{margin:0 0 14px;color:var(--muted,#48656a);line-height:1.55;font-size:.93rem}.extra-spot-card{border-left:3px solid #2b7779}.extra-spot-card .research-columns{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}

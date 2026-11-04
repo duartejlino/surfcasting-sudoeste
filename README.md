@@ -1,4 +1,4 @@
-# Mar Sudoeste v4.4 · Filtro global por atividade
+# Mar Sudoeste v4.5 · Filtro global e catálogo ampliado
 
 A v4.4 usa **um seletor global no topo**: Surfcasting, Surf, Pesca spinning, Caça submarina e Ir à maré. A escolha governa **Resumo, Calendário diário/mensal, Comparação de praias, Raciocínio, Praias, Histórico, Aprendizagem e pesos no Modelo**.
 
@@ -28,3 +28,11 @@ Enviar `index.html`, `app.js`, `styles.css`, `sw.js`, `manifest.webmanifest` par
 ## Melhoria v4.4.1 — guias dos spots
 
 As fichas de São Torpes, Praia Grande Porto Covo, Aivados e Malhão passaram a incluir **descrições locais recolhidas em Surfnerd, Surfline e outros guias de surf**, visíveis em **Praias** para todas as atividades, com links diretos e interpretação assinalada. O `forecast.json` importado continua a controlar as notas. Esta atualização não mexe no histórico, nas regras de elegibilidade nem nos dados preexistentes. Ver `FONTES_SURF_SPOTS_2026-11.md`.
+
+## v4.5 · Spots adicionais
+
+Foram adicionadas 7 zonas com coordenadas, guias por atividade e fontes: Areão, Morgavel, Vieirinha, Burrinho, Ilha do Pessegueiro, Patacho e Farol de Milfontes. As praias novas aparecem nas listas de atividades elegíveis, **marcadas sem previsão própria**, sem notas inventadas. Consultar `NOVAS_PRAIAS_E_FONTES.md`.
+
+A ferramenta opcional `tools/Recolher_Dados_Mar_Sudoeste_14_Zonas.html` recolhe séries por coordenada para as 14 zonas, para enviares nesta conversa e gerar o próximo `forecast.json`. Não é preciso instalar API paga. Para recolha automática no GitHub, substituir `scripts/collect_sources.py` pelo ficheiro `tools/collect_sources_14_spots.py` (o workflow existente continua a chamar o mesmo caminho).
+
+**Instalação:** usar o ZIP completo. Enviar `spot_catalog.js` juntamente com `app.js`/`index.html`; o novo service worker está incluído. **Não é preciso importar outro forecast só para consultar as fichas**.
