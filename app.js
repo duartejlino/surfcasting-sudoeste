@@ -1,4 +1,4 @@
-const APP={activeActivity:'surfcasting',surfLevel:'intermedio',forecast:null,activityIndex:new Map(),history:[],activityUI:{view:'day',date:null,month:null,period:'AUTO',beach:'ALL',kind:'ALL',surfLevel:'intermedio',selected:new Set()},compareBeachIds:new Set(),selection:{date:null,beach:null,period:'Amanhecer',species:'Geral'},calendar:{view:'day',month:null,period:'AUTO',beach:'ALL'}};
+const APP={activeActivity:'surfcasting',surfLevel:'intermedio',forecast:null,activityIndex:new Map(),history:[],activityUI:{view:'day',date:null,month:null,period:'AUTO',beach:'ALL',kind:'ALL',surfLevel:'intermedio',selected:new Set()},compareBeachIds:new Set(),selection:{date:null,beach:null,period:'Amanhecer',species:'Geral'},calendar:{view:'timeline',month:null,period:'AUTO',beach:'ALL'}};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const STORAGE_HISTORY='surfcasting_history_v3', STORAGE_FORECAST='surfcasting_forecast_override_v3';
 const periods=['Madrugada','Amanhecer','Manhã','Tarde','Anoitecer','Noite'];
@@ -605,6 +605,126 @@ function renderWeights(){
  const row=activeRows(APP.selection.date)[0],factors=row?.factors||[];
  $('#weightsList').innerHTML=`<p class="muted"><strong>${esc(activityName(currentActivity()))}.</strong> ${esc(previewLabel(row))}. Estes pesos não são os pesos do surfcasting.</p>`+(factors.length?factors.slice().sort((a,b)=>(b.weight||0)-(a.weight||0)).map(f=>`<div class="mini-row"><strong>${esc(f.name||f.label)}</strong> · ${Math.round((Number(f.weight)||0)*100)}%<div class="mini-bar"><i style="width:${Math.min(100,(Number(f.weight)||0)*550)}%"></i></div></div>`).join(''):'<p class="muted">Sem pesos disponíveis para esta atividade no ficheiro importado.</p>');
 }
+
+/* v4.6 Radar de oportunidades: o site lê apenas avaliações importadas, nunca recalcula meteorologia. */
+APP.radar={date:null,beach:'ALL',period:'AUTO'};
+function radarDateLabel(d,long=false){return new Date(d+'T12:00:00Z').toLocaleDateString('pt-PT',long?{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'}:{weekday:'short',day:'2-digit',month:'2-digit',timeZone:'UTC'}).replace(/^\p{L}/u,x=>x.toUpperCase())}
+function radarDates(){const ds=dates();const next=ds.filter(d=>d>=localDateISO());return next.length?next:ds}
+function radarSyncSelectors(){
+ const sel=$('#radarBeach'),choices=[['ALL','Todas as zonas'],...beaches().map(([id,b])=>[id,b.name])];
+ const prev=APP.radar.beach;
+ sel.innerHTML=choices.map(([id,name])=>`<option value="${esc(id)}">${esc(name)}</option>`).join('');
+ APP.radar.beach=choices.some(([id])=>id===prev)?prev:'ALL';sel.value=APP.radar.beach;
+ $('#radarPeriod').value=periods.includes(APP.radar.period)?APP.radar.period:'AUTO';
+}
+function radarCandidates(date,beach='ALL',period='AUTO'){
+ const ids=beach==='ALL'?beaches().map(([id])=>id):[beach],ps=period==='AUTO'?periods:[period],species=$('#speciesSelect').value;
+ const res=[];
+ for(const bid of ids)for(const p of ps){
+  let a=activityFor(date,bid,p);
+  if(!a)continue;
+  if(currentActivity()==='surfcasting'&&species!=='Geral'){
+   const raw=evaluation(date,bid,p,species);
+   if(!raw)continue;
+   a={...a,score:raw.score,confidence:raw.confidence,reasons:[raw.summary,...(a.reasons||[])].filter(Boolean),_radarSpecies:species};
+  }
+  res.push(a);
+ }
+ return res;
+}
+function radarBest(date,beach='ALL',period='AUTO'){
+ // Reter resultados já lidos: trocar dia não volta a percorrer as 9360 avaliações.
+ if(APP.radar.cacheForecast!==APP.forecast){APP.radar.cacheForecast=APP.forecast;APP.radar.bestCache=new Map()}
+ const key=[currentActivity(),globalLevel(),$('#speciesSelect').value,date,beach,period].join('|');
+ if(APP.radar.bestCache.has(key))return APP.radar.bestCache.get(key);
+ const rows=radarCandidates(date,beach,period);
+ const best=sortOptions(rows).find(validOption)||null;
+ APP.radar.bestCache.set(key,best);return best;
+}
+function radarTopBeaches(date,beach='ALL',period='AUTO',limit=3){
+ const ids=beach==='ALL'?beaches().map(([id])=>id):[beach];
+ return ids.map(id=>radarBest(date,id,period)).filter(Boolean).sort((a,b)=>b.score-a.score).slice(0,limit);
+}
+function radarTone(a){return !validOption(a)?'radar-unrated':a.score>=7.5?'radar-high':a.score>=6?'radar-med':'radar-low'}
+function radarScore(a){return validOption(a)?Number(a.score).toFixed(1):'—'}
+function radarConfidence(a){return a&&Number.isFinite(Number(a.confidence))?`C${Math.round(Number(a.confidence))}%`:'C —'}
+function radarOpenReason(a){
+ if(!a)return;
+ if(currentActivity()==='surfcasting'&&a._radarSpecies){const raw=evaluation(a.date,a.beach_id,a.period,a._radarSpecies);if(raw)return openReason(raw)}
+ return openActivityReason(a);
+}
+function radarShortConditions(a){const c=a?.conditions||{};return `Mar ${readableNumber(c.wave_offshore_m)} m · ${readableNumber(c.wave_period_s,0)} s · vento ${readableNumber(c.wind_kmh,0)} km/h`}
+function radarShowTimeline(){
+ radarSyncSelectors();const ds=radarDates(),beach=APP.radar.beach,period=APP.radar.period;
+ if(!ds.length){$('#radarKpis').innerHTML='';$('#radarTimelineBars').innerHTML='<p class="muted">Sem datas no ficheiro.</p>';$('#radarTimelineList').innerHTML='';$('#radarSelection').innerHTML='';return}
+ if(!ds.includes(APP.radar.date))APP.radar.date=ds[0];
+ const series=ds.map(d=>{const a=radarBest(d,beach,period);return{d,a}});
+ const available=series.filter(x=>validOption(x.a)),overall=available.slice().sort((x,y)=>y.a.score-x.a.score)[0];
+ const strong=available.filter(x=>x.a.score>=7.5).length;
+ $('#radarContext').textContent=`${activityName(currentActivity())} · ${beach==='ALL'?'todas as zonas':APP.forecast.beaches[beach]?.name||beach} · ${period==='AUTO'?'melhor período do dia':period}. Dados do ficheiro IA importado.`;
+ $('#radarKpis').innerHTML=`<div class="radar-kpi"><span>Melhor dia</span><strong>${overall?esc(radarDateLabel(overall.d)):'—'}</strong><small>${overall?radarScore(overall.a)+'/10 · '+esc(APP.forecast.beaches[overall.a.beach_id]?.name||''):'Sem janela validada'}</small></div><div class="radar-kpi"><span>Dias ≥ 7,5</span><strong>${strong}<small> / ${ds.length}</small></strong><small>Nota, não probabilidade de sucesso</small></div><div class="radar-kpi"><span>Dias com avaliação</span><strong>${available.length}<small> / ${ds.length}</small></strong><small>Risco e dados incompletos ficam de fora</small></div>`;
+ $('#radarTimelineBars').innerHTML=series.map(({d,a})=>{
+  const tone=radarTone(a),picked=d===APP.radar.date?' selected':'';
+  return `<button type="button" class="radar-day-bar ${tone}${picked}" data-d="${esc(d)}" aria-pressed="${d===APP.radar.date}" title="${esc(radarDateLabel(d,true))}: ${radarScore(a)} / 10 · ${radarConfidence(a)}"><span class="radar-bar-score">${radarScore(a)}</span><span class="radar-bar-track"><span class="radar-bar-fill" style="height:${validOption(a)?Math.max(9,Math.min(100,a.score*10)):0}%"></span></span><span class="radar-bar-date">${esc(radarDateLabel(d))}</span><small>${esc(radarConfidence(a))}</small></button>`;
+ }).join('');
+ $('#radarTimelineList').innerHTML=series.map(({d,a})=>{
+  const tone=radarTone(a),selected=d===APP.radar.date?' selected':'';
+  const name=a?APP.forecast.beaches[a.beach_id]?.name||a.beach_id:'Sem janela validada';
+  return `<button type="button" class="radar-list-day ${tone}${selected}" data-d="${esc(d)}" aria-pressed="${d===APP.radar.date}"><span class="radar-list-date">${esc(radarDateLabel(d))}</span><span class="radar-list-main"><b>${esc(name)}</b><small>${a?esc(a.period)+' · '+radarConfidence(a):'Sem oportunidade validada'}</small></span><span class="radar-list-score">${radarScore(a)}</span><span class="radar-list-spark" style="--strength:${validOption(a)?a.score*10:0}%"></span></button>`;
+ }).join('');
+ $$('.radar-day-bar,.radar-list-day').forEach(b=>b.addEventListener('click',()=>{APP.radar.date=b.dataset.d;radarShowTimeline()}));
+ const date=APP.radar.date,top=radarTopBeaches(date,beach,period);
+ $('#radarSelection').innerHTML=`<div class="radar-selection-header"><div><div class="eyebrow">DIA SELECIONADO</div><h3>${esc(radarDateLabel(date,true))}</h3></div><button type="button" class="radar-action" id="radarSeeHours">Ver seis períodos</button></div>`+
+ (top.length?`<div class="radar-top3">${top.map((a,i)=>`<article class="radar-pick"><div class="radar-pick-heading"><span class="radar-place">${i+1}º</span><strong>${esc(APP.forecast.beaches[a.beach_id]?.name||a.beach_id)}</strong><span class="radar-pick-score ${radarTone(a)}">${radarScore(a)}</span></div><p class="radar-when">${esc(a.period)} ${a.window?'· '+esc(a.window):''} · ${radarConfidence(a)}</p><p class="radar-conditions">${esc(radarShortConditions(a))}</p><p class="radar-pick-reason">${esc(activityDetail(a))}</p><button class="radar-action radar-reason" type="button" data-b="${esc(a.beach_id)}" data-p="${esc(a.period)}">Ver raciocínio completo</button></article>`).join('')}</div>`:
+ '<p class="radar-no-safe">Nenhuma janela passou os filtros de risco e disponibilidade de nota para este dia. Consulta o detalhe, mas não interpretes a ausência de nota como segurança.</p>');
+ $('#radarSeeHours').onclick=()=>{APP.calendar.view='day';$('#calendarView').value='day';$('#dateSelect').value=date;APP.selection.date=date;renderCalendar();$('#dayCalendarCard').scrollIntoView({behavior:'smooth',block:'start'})};
+ $$('.radar-reason').forEach(b=>b.onclick=()=>{const a=radarBest(date,b.dataset.b,b.dataset.p);radarOpenReason(a)});
+}
+function radarShowHeatmap(){
+ radarSyncSelectors();const ds=radarDates(),beach=APP.radar.beach,period=APP.radar.period;
+ $('#heatmapDescription').textContent=`${activityName(currentActivity())} · ${period==='AUTO'?'melhor período por dia':period} · ${ds.length} dias. Apenas valores de avaliações existentes; não são ondas medidas na rebentação.`;
+ const ids=(beach==='ALL'?beaches().map(([id])=>id):[beach]);
+ const rows=ids.map(id=>{const vals=ds.map(d=>radarBest(d,id,period));const rated=vals.filter(validOption);return{id,vals,strong:rated.filter(x=>x.score>=7.5).length,mean:rated.length?rated.reduce((s,a)=>s+a.score,0)/rated.length:0}}).sort((a,b)=>b.strong-a.strong||b.mean-a.mean);
+ const count=ds.length;$('#radarHeatmap').style.setProperty('--radar-count',String(count));
+ $('#radarHeatmap').innerHTML=ds.length?`<div class="heatmap-head heatmap-corner">Zona</div>${ds.map(d=>`<div class="heatmap-head">${esc(radarDateLabel(d))}</div>`).join('')}`+
+ rows.map(({id,vals,strong})=>`<div class="heatmap-beach"><b>${esc(APP.forecast.beaches[id]?.name||id)}</b><small>${strong} dia(s) ≥ 7,5</small></div>${vals.map((a,i)=>`<button type="button" class="heatmap-cell ${radarTone(a)}" data-d="${esc(ds[i])}" data-b="${esc(id)}" title="${esc(APP.forecast.beaches[id]?.name||id)} · ${esc(ds[i])} · ${a?esc(a.period)+' · '+radarConfidence(a):'Sem avaliação válida'}"><strong>${radarScore(a)}</strong><small>${validOption(a)?radarConfidence(a):'—'}</small></button>`).join('')}`).join(''):'<p class="muted">Sem dados para este intervalo.</p>';
+ $$('.heatmap-cell').forEach(b=>b.onclick=()=>radarShowHeatmapDetail(b.dataset.d,b.dataset.b,period));
+ if(ds.length&&rows.length)radarShowHeatmapDetail(ds[0],rows[0].id,period);
+ else $('#heatmapDetail').innerHTML='Sem avaliações para mostrar.';
+}
+function radarShowHeatmapDetail(date,bid,period){
+ const a=radarBest(date,bid,period),name=APP.forecast.beaches[bid]?.name||bid;
+ $$('.heatmap-cell').forEach(el=>el.classList.toggle('selected',el.dataset.d===date&&el.dataset.b===bid));
+ $('#heatmapDetail').innerHTML=`<div><div class="eyebrow">COMBINAÇÃO SELECIONADA</div><h3>${esc(name)} · ${esc(radarDateLabel(date))}</h3></div>`+
+ (a?`<div class="heatmap-detail-body"><div><strong class="heatmap-detail-score ${radarTone(a)}">${radarScore(a)}/10</strong><span>${esc(a.period)} · ${radarConfidence(a)}</span><small>${esc(radarShortConditions(a))}</small></div><p>${esc(activityDetail(a))}</p><button type="button" class="radar-action" id="heatmapShowReason">Abrir raciocínio</button></div>`:
+ '<p class="radar-no-safe">Sem oportunidade validada nesta combinação. Pode haver risco ou insuficiência de dados; consulta as condições reais antes de decidir.</p>');
+ const btn=$('#heatmapShowReason');if(btn)btn.onclick=()=>radarOpenReason(a);
+}
+function syncCalendarControls(){
+ const view=$('#calendarView')?.value||APP.calendar.view;
+ $$('.day-control').forEach(x=>x.hidden=view!=='day');
+ $$('.month-control').forEach(x=>x.hidden=view!=='month');
+ $$('.radar-control').forEach(x=>x.hidden=!['timeline','heatmap'].includes(view));
+ $('#radarCard').hidden=view!=='timeline';$('#heatmapCard').hidden=view!=='heatmap';
+ $('#dayCalendarCard').hidden=view!=='day';$('#monthCalendarCard').hidden=view!=='month';
+}
+function renderCalendar(){
+ const view=$('#calendarView')?.value||APP.calendar.view;APP.calendar.view=view;syncCalendarControls();
+ if(view==='timeline')return radarShowTimeline();
+ if(view==='heatmap')return radarShowHeatmap();
+ if(view==='month')return currentActivity()==='surfcasting'?renderMonthCalendar():renderActivityMonthGlobal();
+ return currentActivity()==='surfcasting'?renderDayCalendar():renderActivityDayGlobal();
+}
+function renderActivityDayGlobal(){
+ const date=$('#dateSelect').value||APP.selection.date;APP.selection.date=date;
+ const body=$('#calendarTable tbody');body.innerHTML='';
+ for(const [bid,b] of beaches()){const tr=document.createElement('tr');tr.innerHTML=`<td class="beach-cell"><strong>${esc(b.name)}</strong></td>`+periods.map(p=>`<td>${activityCalendarCell(activityFor(date,bid,p))}</td>`).join('');body.appendChild(tr)}
+ $$('.generic-cal').forEach(b=>b.onclick=()=>openActivityReason(activityFor(b.dataset.d,b.dataset.b,b.dataset.p)));
+ renderGlobalCompare(date);
+}
+$('#radarBeach').addEventListener('change',e=>{APP.radar.beach=e.target.value;renderCalendar()});
+$('#radarPeriod').addEventListener('change',e=>{APP.radar.period=e.target.value;renderCalendar()});
+
 $('#globalActivity').value=(()=>{try{return localStorage.getItem('mar_sudoeste_global_activity_v44')||'surfcasting'}catch{return 'surfcasting'}})();
 APP.activeActivity=ACTIVITY_ORDER.includes($('#globalActivity').value)?$('#globalActivity').value:'surfcasting';
 $('#globalActivity').addEventListener('change',e=>applyGlobalActivity(e.target.value));

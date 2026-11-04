@@ -127,3 +127,66 @@ button:focus-visible,select:focus-visible,summary:focus-visible{outline:3px soli
 
 /* Catálogo de praias v4.5 */
 .spot-catalog-explainer{margin:0 0 14px;color:var(--muted,#48656a);line-height:1.55;font-size:.93rem}.extra-spot-card{border-left:3px solid #2b7779}.extra-spot-card .research-columns{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+
+/* v4.6 · Radar de oportunidades: ecrã amplo, timeline primeiro, telemóvel sem tabela gigante */
+[hidden]{display:none!important}
+main{max-width:none;width:100%;padding:clamp(12px,1.35vw,26px)}
+#calendar{width:100%;max-width:none}
+#calendar .calendar-controls{align-items:end;gap:12px}
+#calendar .calendar-controls label{min-width:160px;flex:0 1 250px}
+#calendar .calendar-controls select{width:100%}
+.radar-card{padding:clamp(14px,1.4vw,26px);margin-bottom:14px}
+.radar-header{display:flex;justify-content:space-between;align-items:start;gap:15px;margin-bottom:18px}
+.radar-header h2{font-size:clamp(20px,1.55vw,30px);line-height:1.2;margin:5px 0}
+.radar-header p{margin:4px 0}
+.radar-help{font-size:12px;color:#557476;background:#eef5f3;border-radius:999px;padding:8px 12px;white-space:normal;max-width:350px}
+.radar-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.radar-kpi{border:1px solid #dbe7e4;background:#f7faf9;border-radius:13px;padding:13px 15px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.radar-kpi>span{font-size:12px;color:#557176}.radar-kpi>strong{font-size:clamp(19px,1.45vw,26px);line-height:1.2}.radar-kpi>strong small{font-size:13px;color:#688081}.radar-kpi>small{font-size:11px;color:#638082}
+.radar-chart-caption{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-bottom:12px}.radar-chart-caption span{font-size:12px;color:#718486}
+.radar-timeline-bars{display:grid;grid-template-columns:repeat(15,minmax(0,1fr));gap:clamp(3px,.55vw,12px);align-items:end;min-height:205px;padding:12px 5px 2px;border-radius:12px;background:linear-gradient(to top,#fff 0%,#fff 24%,#f4f7f6 24%,#f4f7f6 25%,#fff 25%,#fff 49%,#f4f7f6 49%,#f4f7f6 50%,#fff 50%,#fff 74%,#f4f7f6 74%,#f4f7f6 75%,#fff 75%,#fff 100%)}
+.radar-day-bar{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;min-width:0;border:1px solid transparent;border-radius:10px;background:transparent;padding:3px 2px 5px;color:var(--text)}
+.radar-day-bar:hover,.radar-day-bar.selected{background:#ecf5f2;border-color:#95bbb4}
+.radar-bar-score{font-weight:850;font-size:clamp(12px,1vw,17px)}
+.radar-bar-track{height:128px;width:clamp(16px,2vw,36px);max-width:90%;border-radius:6px 6px 2px 2px;display:flex;align-items:flex-end;background:#edf1f0;overflow:hidden}
+.radar-bar-fill{width:100%;background:var(--tone,#8eaaa5);border-radius:6px 6px 0 0;transition:height .18s ease}
+.radar-bar-date{font-weight:700;font-size:clamp(9px,.75vw,12px);white-space:nowrap}
+.radar-day-bar>small{font-size:10px;color:#6e8284}
+.radar-high{--tone:#248267;--tone-bg:#e0f1e9;--tone-txt:#12573e}
+.radar-med{--tone:#d7a44f;--tone-bg:#fcf2dc;--tone-txt:#805514}
+.radar-low{--tone:#bd796d;--tone-bg:#f9e8e4;--tone-txt:#8d443a}
+.radar-unrated{--tone:#bbc7c4;--tone-bg:#edf1ef;--tone-txt:#5b6b69}
+.radar-key{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0 0;font-size:12px;color:#657b80}
+.radar-dot{display:inline-block;width:11px;height:11px;border-radius:3px;background:var(--tone)}
+.radar-selection{border-top:1px solid var(--border);margin-top:19px;padding-top:17px}
+.radar-selection-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}.radar-selection-header h3{font-size:20px;margin:3px 0}
+.radar-action{min-height:40px;border:1px solid #99c0b8;background:#eaf5f2;border-radius:9px;padding:8px 12px;color:#175c5b;font-weight:750;cursor:pointer}
+.radar-action:hover{background:#d8eae6}
+.radar-top3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.radar-pick{border:1px solid #dce8e5;border-radius:12px;padding:15px;display:flex;flex-direction:column;min-width:0;background:#fff}
+.radar-pick-heading{display:flex;align-items:center;gap:9px;min-width:0}.radar-pick-heading strong{font-size:16px;line-height:1.2;flex:1;min-width:0}.radar-place{font-size:12px;color:#60777b;font-weight:800}.radar-pick-score{font-size:22px;font-weight:850;color:var(--tone-txt);background:var(--tone-bg);border-radius:7px;padding:3px 8px}
+.radar-when{color:#426669;font-weight:700;font-size:12px;margin:10px 0 4px}.radar-conditions{color:#526f74;font-size:12px;margin:1px 0 8px}.radar-pick-reason{font-size:13px;line-height:1.48;flex:1;margin:0 0 12px}.radar-pick .radar-action{align-self:flex-start}
+.radar-no-safe{background:#f8f3ea;border:1px solid #e8dbbd;border-radius:10px;padding:12px;font-size:13px}
+.radar-timeline-list{display:none}
+.heatmap-scroll{overflow-x:auto;overscroll-behavior-inline:contain;padding-bottom:12px}
+.radar-heatmap{display:grid;grid-template-columns:175px repeat(var(--radar-count,15),minmax(68px,1fr));gap:5px;min-width:max-content;align-items:stretch}
+.heatmap-head{font-size:11px;font-weight:800;text-align:center;padding:8px 2px;background:#f1f6f4;color:#406166;border-radius:6px}
+.heatmap-beach,.heatmap-corner{position:sticky;left:0;z-index:2;background:#fff}
+.heatmap-beach{padding:6px 9px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid #d9e7e1;border-bottom:1px solid #edf2ef;line-height:1.2}.heatmap-beach b{font-size:12px}.heatmap-beach small{font-size:10px;color:#708386;margin-top:4px}
+.heatmap-cell{border:1px solid transparent;border-radius:7px;background:var(--tone-bg);color:var(--tone-txt);min-height:48px;display:flex;flex-direction:column;justify-content:center;gap:1px;align-items:center;cursor:pointer}.heatmap-cell strong{font-size:17px;line-height:1.1}.heatmap-cell small{font-size:10px}.heatmap-cell:hover,.heatmap-cell.selected{outline:2px solid #206963;outline-offset:0}
+.heatmap-detail{margin-top:12px;border:1px solid #d9e7e4;border-radius:12px;padding:14px;background:#fafcfc}
+.heatmap-detail h3{margin:4px 0 10px}.heatmap-detail-body{display:flex;align-items:center;gap:15px;flex-wrap:wrap}.heatmap-detail-body>div{display:flex;flex-direction:column;gap:3px;min-width:190px}.heatmap-detail-score{font-size:25px;color:var(--tone-txt)}.heatmap-detail-body span,.heatmap-detail-body small{font-size:12px;color:#4f7372}.heatmap-detail-body p{flex:1;min-width:230px;font-size:13px;margin:0}
+@media(max-width:1100px){.radar-timeline-bars{grid-template-columns:repeat(15,minmax(42px,1fr));overflow-x:auto}.radar-top3{grid-template-columns:repeat(2,minmax(0,1fr))}.radar-top3 article:last-child{grid-column:1/-1}}
+@media(max-width:760px){
+ main{padding:10px}.radar-card{padding:14px}.radar-header{display:block}.radar-help{display:inline-block;margin-top:8px;padding:5px 8px}
+ #calendar .calendar-controls label{min-width:calc(50% - 7px);flex:1 1 calc(50% - 7px)}
+ .radar-kpis{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.radar-kpi{padding:9px}.radar-kpi>strong{font-size:16px}.radar-kpi>small{font-size:10px}.radar-kpi>span{font-size:10px}
+ .radar-timeline-bars{display:none}.radar-timeline-list{display:grid;grid-template-columns:1fr;gap:5px}.radar-chart-caption span{display:none}
+ .radar-list-day{width:100%;text-align:left;display:grid;grid-template-columns:77px minmax(0,1fr) 40px;grid-template-rows:1fr 5px;gap:5px 8px;align-items:center;background:#fff;border:1px solid #dce6e3;border-radius:9px;padding:10px;cursor:pointer;color:var(--text)}
+ .radar-list-day.selected{border-color:#2f8173;background:#f2f8f5;box-shadow:inset 3px 0 #2f8173}.radar-list-date{font-weight:850;font-size:12px}.radar-list-main{min-width:0}.radar-list-main b,.radar-list-main small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.radar-list-main b{font-size:13px}.radar-list-main small{font-size:10px;color:#648085}.radar-list-score{font-size:20px;font-weight:850;text-align:right;color:var(--tone-txt)}.radar-list-spark{grid-column:1/-1;height:4px;width:100%;border-radius:3px;background:linear-gradient(to right,var(--tone) var(--strength),#eef2f0 var(--strength))}
+ .radar-top3{grid-template-columns:1fr}.radar-top3 article:last-child{grid-column:auto}.radar-pick{padding:12px}
+ .radar-selection-header h3{font-size:17px}.radar-selection-header .radar-action{font-size:12px;padding:7px}
+ .radar-heatmap{grid-template-columns:118px repeat(var(--radar-count,15),minmax(56px,1fr));gap:4px}.heatmap-beach{padding:5px}.heatmap-beach b{font-size:11px}.heatmap-cell strong{font-size:14px}.heatmap-detail-body{display:block}.heatmap-detail-body p{margin:12px 0}.heatmap-detail-body .radar-action{margin-top:7px}
+}
+@media(max-width:340px){#calendar .calendar-controls label{min-width:100%;flex-basis:100%}.radar-kpis{grid-template-columns:1fr 1fr}.radar-kpis .radar-kpi:last-child{grid-column:1/-1}}
+@media(prefers-reduced-motion:reduce){.radar-bar-fill{transition:none}}

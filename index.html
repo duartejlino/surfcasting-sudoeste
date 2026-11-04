@@ -23,7 +23,7 @@
 </div>
 <nav class="tabs" aria-label="Secções">
   <button class="tab active" data-tab="dashboard">Resumo</button>
-  <button class="tab" data-tab="calendar">Calendário</button>
+  <button class="tab" data-tab="calendar">Oportunidades</button>
   <button class="tab" data-tab="reasoning">Raciocínio</button>
   <button class="tab" data-tab="beaches">Praias</button>
   <button class="tab" data-tab="history">Histórico</button>
@@ -48,14 +48,31 @@
 
 <section id="calendar" class="panel">
   <div class="controls card calendar-controls">
-    <label>Vista<select id="calendarView"><option value="day">Dia</option><option value="month">Mês</option></select></label>
+    <label>Explorar<select id="calendarView"><option value="timeline">Linha temporal</option><option value="heatmap">Praias × dias</option><option value="day">Detalhe por horas</option><option value="month">Calendário mensal</option></select></label>
     <label class="species-only">Espécie alvo<select id="speciesSelect"><option>Geral</option><option>Robalo</option><option>Sargo</option><option>Dourada</option></select></label>
-    <label class="day-control">Dia<select id="dateSelect"></select></label>
+    <label class="radar-control">Zona<select id="radarBeach"><option value="ALL">Todas as zonas</option></select></label>
+    <label class="radar-control">Período<select id="radarPeriod"><option value="AUTO">Melhor período</option><option>Madrugada</option><option>Amanhecer</option><option>Manhã</option><option>Tarde</option><option>Anoitecer</option><option>Noite</option></select></label>
+    <label class="day-control" hidden>Dia<select id="dateSelect"></select></label>
     <label class="month-control" hidden>Mês<select id="monthSelect"></select></label>
     <label class="month-control" hidden>Período<select id="monthPeriodSelect"><option value="AUTO">Automático — melhor período</option><option>Madrugada</option><option>Amanhecer</option><option>Manhã</option><option>Tarde</option><option>Anoitecer</option><option>Noite</option></select></label>
     <label class="month-control" hidden>Praia<select id="monthBeachSelect"><option value="ALL">Todas — melhor praia</option></select></label>
   </div>
-  <div id="dayCalendarCard" class="card">
+  <div id="radarCard" class="card radar-card">
+    <div class="radar-header"><div><div class="eyebrow">DECIDIR EM SEGUNDOS</div><h2>Quando vale mais a pena?</h2><p class="muted" id="radarContext">Melhor oportunidade por dia na atividade escolhida.</p></div><span class="radar-help">Nota = potencial indicativo · Confiança ≠ segurança</span></div>
+    <div class="radar-kpis" id="radarKpis" aria-live="polite"></div>
+    <div class="radar-chart-caption"><strong>Oportunidades nos próximos dias</strong><span>Seleciona um dia para ver as melhores zonas</span></div>
+    <div id="radarTimelineBars" class="radar-timeline-bars" aria-label="Gráfico das melhores pontuações por dia"></div>
+    <div id="radarTimelineList" class="radar-timeline-list" aria-label="Lista diária de oportunidades"></div>
+    <div class="radar-key"><span class="radar-dot radar-high"></span> ≥ 7,5 <span class="radar-dot radar-med"></span> 6–7,4 <span class="radar-dot radar-low"></span> &lt; 6 <span class="radar-dot radar-unrated"></span> Não validado</div>
+    <div class="radar-selection" id="radarSelection"></div>
+  </div>
+  <div id="heatmapCard" class="card radar-card" hidden>
+    <div class="radar-header"><div><div class="eyebrow">COMPARAR LOCAIS</div><h2>Praias × dias</h2><p class="muted" id="heatmapDescription">A melhor janela de cada dia em cada praia.</p></div><span class="radar-help">Cor = nota indicativa; C = confiança heurística</span></div>
+    <div class="radar-key"><span class="radar-dot radar-high"></span> ≥ 7,5 <span class="radar-dot radar-med"></span> 6–7,4 <span class="radar-dot radar-low"></span> &lt; 6 <span class="radar-dot radar-unrated"></span> Sem avaliação válida</div>
+    <div class="heatmap-scroll" tabindex="0" aria-label="Matriz de praias e dias; podes deslocar horizontalmente"><div id="radarHeatmap" class="radar-heatmap"></div></div>
+    <div class="heatmap-detail" id="heatmapDetail" aria-live="polite">Seleciona uma célula para ver a janela e os fatores mais relevantes.</div>
+  </div>
+  <div id="dayCalendarCard" class="card" hidden>
     <h3>Praias × períodos do dia · atividade selecionada</h3>
     <p class="muted">Cada célula mostra o potencial para a atividade escolhida, mar, vento, maré e limites. Toca apenas para abrir a justificação, fatores e fontes.</p>
     <div class="calendar-legend"><span>Mar = altura offshore</span><span>72h = estado recente do mar</span><span>C = confiança da análise</span></div>
@@ -97,7 +114,7 @@
 
 <section id="insights" class="panel"><div class="card"><h3>Aprendizagem com as tuas atividades</h3><label class="insight-select" hidden> Analisar atividade <select id="insightActivity"><option value="surfcasting">Surfcasting</option><option value="surf">Surf</option><option value="spinning">Pesca spinning</option><option value="sub">Caça submarina</option><option value="mare">Ir à maré</option></select></label><p id="insightHeadline">Ainda não há dados suficientes.</p></div><div class="insight-grid"><div class="card"><h3>Por praia</h3><div id="beachInsights"></div></div><div class="card"><h3>Por período</h3><div id="periodInsights"></div></div><div class="card"><h3>Condições das capturas</h3><div id="conditionInsights"></div></div><div class="card"><h3>Previsão vs realidade</h3><div id="modelInsights"></div></div></div></section>
 
-<section id="about" class="panel"><div class="card prose"><h3>Princípio do motor</h3><p>O filtro de atividade no topo aplica-se ao Resumo, Calendário, Comparação, Raciocínio, Praias, Histórico e Aprendizagem. Cada atividade tem critérios diferentes; a mesma nota numérica não implica que a atividade seja segura.</p><p>O ChatGPT é o motor de análise externo: faz a recolha das fontes quando pedes uma atualização e gera um novo <code>forecast.json</code>. A app não consulta as APIs meteorológicas nem altera as pontuações por iniciativa própria. Apenas apresenta e guarda o raciocínio importado, incluindo auditoria de fontes quando o ficheiro a contém.</p><h3>Atualização por IA</h3><p>Pede nesta conversa <strong>“Atualiza o Mar Sudoeste”</strong>, descarrega o ficheiro JSON e escolhe <strong>Importar atualização IA</strong>. Para aprender com as tuas saídas, usa <strong>Histórico → Exportar histórico para ChatGPT</strong> e envia o ficheiro aqui. A importação não envia dados para nenhum servidor; o histórico fica neste navegador até o exportares.</p><h3>Pesos atuais da atividade escolhida</h3><div id="weightsList"></div><details class="tide-sheet" id="tideDetails"><summary>Marés oficiais de Sines · novembro 2026</summary><div id="officialTidesOverview"></div></details><div class="activity-safety"><h3>Segurança e legalidade</h3><p>As notas são potencial ambiental, nunca autorização nem garantia de condições seguras. Visibilidade debaixo de água, correntes, acessos às rochas, zonas protegidas, licenças e regras de apanha têm de ser confirmadas no local e junto das autoridades competentes. Nunca uses uma nota para justificar entrada numa zona exposta.</p><div class="activity-links"><a target="_blank" rel="noopener" href="https://dgrm.pt/pt/web/guest/licencas">DGRM · Licenças</a><a target="_blank" rel="noopener" href="https://www.dgrm.pt/zonas-de-pesca">DGRM · Restrições de zonas</a></div></div><h3>Limitações assumidas</h3><ul><li>Bancos e canais de areia são dinâmicos e não são observados automaticamente.</li><li>O motor agora incorpora a tabela oficial de Sines (IH 2026) para a altura da baixa-mar, amplitude e fase da maré. A previsão regional não substitui a observação da costa nem as regras locais.</li><li>A confiança é mostrada separadamente da nota para não fingir precisão.</li></ul></div></section>
+<section id="about" class="panel"><div class="card prose"><h3>Princípio do motor</h3><p>O filtro de atividade no topo aplica-se ao Resumo, Oportunidades, Comparação, Raciocínio, Praias, Histórico e Aprendizagem. Cada atividade tem critérios diferentes; a mesma nota numérica não implica que a atividade seja segura.</p><p>O ChatGPT é o motor de análise externo: faz a recolha das fontes quando pedes uma atualização e gera um novo <code>forecast.json</code>. A app não consulta as APIs meteorológicas nem altera as pontuações por iniciativa própria. Apenas apresenta e guarda o raciocínio importado, incluindo auditoria de fontes quando o ficheiro a contém.</p><h3>Atualização por IA</h3><p>Pede nesta conversa <strong>“Atualiza o Mar Sudoeste”</strong>, descarrega o ficheiro JSON e escolhe <strong>Importar atualização IA</strong>. Para aprender com as tuas saídas, usa <strong>Histórico → Exportar histórico para ChatGPT</strong> e envia o ficheiro aqui. A importação não envia dados para nenhum servidor; o histórico fica neste navegador até o exportares.</p><h3>Pesos atuais da atividade escolhida</h3><div id="weightsList"></div><details class="tide-sheet" id="tideDetails"><summary>Marés oficiais de Sines · novembro 2026</summary><div id="officialTidesOverview"></div></details><div class="activity-safety"><h3>Segurança e legalidade</h3><p>As notas são potencial ambiental, nunca autorização nem garantia de condições seguras. Visibilidade debaixo de água, correntes, acessos às rochas, zonas protegidas, licenças e regras de apanha têm de ser confirmadas no local e junto das autoridades competentes. Nunca uses uma nota para justificar entrada numa zona exposta.</p><div class="activity-links"><a target="_blank" rel="noopener" href="https://dgrm.pt/pt/web/guest/licencas">DGRM · Licenças</a><a target="_blank" rel="noopener" href="https://www.dgrm.pt/zonas-de-pesca">DGRM · Restrições de zonas</a></div></div><h3>Limitações assumidas</h3><ul><li>Bancos e canais de areia são dinâmicos e não são observados automaticamente.</li><li>O motor agora incorpora a tabela oficial de Sines (IH 2026) para a altura da baixa-mar, amplitude e fase da maré. A previsão regional não substitui a observação da costa nem as regras locais.</li><li>A confiança é mostrada separadamente da nota para não fingir precisão.</li></ul></div></section>
 </main>
 <footer>Mar Sudoeste • previsões indicativas • confirma segurança, maré e permissões no local.
   <div>Previsões oceanográficas via <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">Open-Meteo Marine</a>: NOAA/NCEP GFS Wave, ECMWF WAM e DWD EWAM.
