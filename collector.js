@@ -79,25 +79,25 @@
       if(run.cancelled)break;
       const url=marine(c,m,vars);
       try{
-        const data=await getJson(url,run,id+' · '+m+' · ondas'),cvg=coverage(data,'wave_height');
+        const data=await getJson(url,run,id+' · '+m+' · ondas ['+vars+']'),cvg=coverage(data,'wave_height');
         if(cvg.points<12)throw new Error('menos de 12 horas válidas');
         return {ok:true,url,retrieved_at_utc:new Date().toISOString(),coverage:cvg,data};
       }catch(e){problems.push({variables:vars,error:String(e).slice(0,210)})}
     }
     return {ok:false,problems};
   }
-  async function getExtras(c,run){
+  async function getExtras(c,run,id){
     for(const vars of ['sea_surface_temperature,ocean_current_velocity,ocean_current_direction,sea_level_height_msl','sea_surface_temperature,sea_level_height_msl','sea_surface_temperature']){
       if(run.cancelled)break;
       const url=marine(c,'best_match',vars);
-      try{const data=await getJson(url,run,'extras · '+vars);if(data?.hourly?.time?.length)return {ok:true,url,data}}catch(e){}
+      try{const data=await getJson(url,run,id+' · extras ['+vars+']');if(data?.hourly?.time?.length)return {ok:true,url,data}}catch(e){}
     }
     return {ok:false,error:'SST / corrente / nível indisponíveis'};
   }
-  async function getWeather(c,basin,run){
+  async function getWeather(c,basin,run,id){
     const url=weather(c,basin);
     try{
-      const data=await getJson(url,run,basin?'chuva · '+c[0]+','+c[1]:'tempo · '+c[0]+','+c[1]);
+      const data=await getJson(url,run,basin?'chuva Mira · '+id:'tempo · '+id);
       const cvg=coverage(data,basin?'precipitation':'wind_speed_10m');
       return {ok:cvg.points>=12,url,data,coverage:cvg};
     }catch(e){return {ok:false,url,error:String(e)}}
@@ -130,10 +130,10 @@
     for(const [id,c] of Object.entries(BEACHES)){
       out.beaches[id]={coordinate_requested:{latitude:c[0],longitude:c[1]},marine_models:{}};
       for(const m of MODELS)jobs.push({name:id+' · '+m,run:async()=>{const v=await getModel(c,m,run,id);out.beaches[id].marine_models[m]=v;return v.ok}});
-      jobs.push({name:id+' · tempo',run:async()=>{const v=await getWeather(c,false,run);out.beaches[id].weather=v;return v.ok}});
-      jobs.push({name:id+' · extras',run:async()=>{const v=await getExtras(c,run);out.beaches[id].extras=v;return v.ok}});
+      jobs.push({name:id+' · tempo',run:async()=>{const v=await getWeather(c,false,run,id);out.beaches[id].weather=v;return v.ok}});
+      jobs.push({name:id+' · extras',run:async()=>{const v=await getExtras(c,run,id);out.beaches[id].extras=v;return v.ok}});
     }
-    for(const [id,c] of Object.entries(BASIN))jobs.push({name:'Mira · '+id,run:async()=>{const v=await getWeather(c,true,run);out.rain_mira[id]=v;return v.ok}});
+    for(const [id,c] of Object.entries(BASIN))jobs.push({name:'Mira · '+id,run:async()=>{const v=await getWeather(c,true,run,id);out.rain_mira[id]=v;return v.ok}});
     for(let day=0;day<3;day++)jobs.push({name:'IPMA · dia '+day,run:async()=>{const v=await getIpma(day,run);out.ipma[''+day]=v;return v.ok}});
     let next=0,completed=0;
     progress.max=jobs.length;
