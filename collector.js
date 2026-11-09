@@ -17,6 +17,8 @@
     'wave_height,wave_direction,wave_period'
   ];
   const WEATHER='wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl,cloud_cover,precipitation,temperature_2m';
+  const RETRYABLE_STATUS=new Set([408,429,500,502,503,504]);
+  const RETRY_DELAYS=[2000,5000,10000];
   const $=id=>document.getElementById(id);
   const start=$('collectorStart'),cancel=$('collectorCancel'),download=$('collectorDownload'),progress=$('collectorProgress'),summary=$('collectorSummary'),counter=$('collectorProgressLabel'),log=$('collectorLog');
   if(!start || !cancel || !download || !progress || !summary || !counter || !log)return;
@@ -32,51 +34,71 @@
     for(let i=0;i<t.length&&i<vals.length;i++)if(Number.isFinite(vals[i])){first??=t[i];last=t[i];points++}
     return {points,key:k,first,last};
   }
-  async function getJson(url,run){
-    if(run.cancelled)throw new Error('Recolha cancelada');
-    const controller=new AbortController();run.controllers.add(controller);
-    const timeout=setTimeout(()=>controller.abort(),25000);
-    try{
-      const response=await fetch(url,{signal:controller.signal,cache:'no-store'});
-      if(!response.ok)throw new Error('HTTP '+response.status);
-      const data=await response.json();
-      if(data?.error)throw new Error(data.reason||'Erro API');
-      return data;
-    }finally{clearTimeout(timeout);run.controllers.delete(controller)}
+  function cancelledError(){const error=new Error('Recolha cancelada');error.name='AbortError';return error}
+  function waitForRetry(run,delay){
+    if(run.cancelled)return Promise.reject(cancelledError());
+    return new Promise((resolve,reject)=>{
+      const cancel=()=>{clearTimeout(timer);run.waits.delete(cancel);reject(cancelledError())};
+      const timer=setTimeout(()=>{run.waits.delete(cancel);resolve()},delay);
+      run.waits.add(cancel);
+    });
   }
-  async function getModel(c,m,run){
+  async function getJson(url,run,label){
+    for(let attempt=1;attempt<=4;attempt++){
+      if(run.cancelled)throw cancelledError();
+      const controller=new AbortController();run.controllers.add(controller);
+      let timedOut=false;
+      const timeout=setTimeout(()=>{timedOut=true;controller.abort()},25000);
+      try{
+        const response=await fetch(url,{signal:controller.signal,cache:'no-store'});
+        if(!response.ok){const error=new Error('HTTP '+response.status);error.status=response.status;throw error}
+        const data=await response.json();
+        if(data?.error)throw new Error(data.reason||'Erro API');
+        if(attempt>1){run.recovered.add(label);render('Recuperado · '+label+' · tentativa '+attempt+'/4')}
+        return data;
+      }catch(error){
+        if(run.cancelled)throw cancelledError();
+        const temporary=RETRYABLE_STATUS.has(error.status)||error instanceof TypeError||(error.name==='AbortError'&&timedOut);
+        if(!temporary||attempt===4)throw error;
+        const delay=RETRY_DELAYS[attempt-1];
+        render('Nova tentativa · '+label+' · '+attempt+'/4 falhou; espera '+delay/1000+' s');
+        await waitForRetry(run,delay);
+      }finally{clearTimeout(timeout);run.controllers.delete(controller)}
+    }
+  }
+  async function getModel(c,m,run,label){
     const problems=[];
     for(const vars of WGROUPS){
       if(run.cancelled)break;
       const url=marine(c,m,vars);
       try{
-        const data=await getJson(url,run),cvg=coverage(data,'wave_height');
+        const data=await getJson(url,run,label),cvg=coverage(data,'wave_height');
         if(cvg.points<12)throw new Error('menos de 12 horas válidas');
         return {ok:true,url,retrieved_at_utc:new Date().toISOString(),coverage:cvg,data};
       }catch(e){problems.push({variables:vars,error:String(e).slice(0,210)})}
     }
     return {ok:false,problems};
   }
-  async function getExtras(c,run){
+  async function getExtras(c,run,label){
     for(const vars of ['sea_surface_temperature,ocean_current_velocity,ocean_current_direction,sea_level_height_msl','sea_surface_temperature,sea_level_height_msl','sea_surface_temperature']){
       if(run.cancelled)break;
       const url=marine(c,'best_match',vars);
-      try{const data=await getJson(url,run);if(data?.hourly?.time?.length)return {ok:true,url,data}}catch(e){}
+      try{const data=await getJson(url,run,label);if(data?.hourly?.time?.length)return {ok:true,url,data}}catch(e){if(run.cancelled)throw e}
     }
     return {ok:false,error:'SST / corrente / nível indisponíveis'};
   }
-  async function getWeather(c,basin,run){
+  async function getWeather(c,basin,run,label){
     const url=weather(c,basin);
     try{
-      const data=await getJson(url,run);
+      const data=await getJson(url,run,label);
       const cvg=coverage(data,basin?'precipitation':'wind_speed_10m');
       return {ok:cvg.points>=12,url,data,coverage:cvg};
     }catch(e){return {ok:false,url,error:String(e)}}
   }
-  async function getIpma(day,run){
+  async function getIpma(day,run,label){
     const url='https://api.ipma.pt/open-data/forecast/oceanography/daily/hp-daily-sea-forecast-day'+day+'.json';
     try{
-      const data=await getJson(url,run);
+      const data=await getJson(url,run,label);
       const row=(data?.data||[]).find(x=>Number(x.globalIdLocal)===1151326)||null;
       return {ok:!!row,url,forecastDate:data.forecastDate,dataUpdate:data.dataUpdate,sines_row:row,error:row?null:'Estação de Sines não encontrada'};
     }catch(e){return {ok:false,url,error:String(e)}}
@@ -88,7 +110,7 @@
   async function collect(){
     if(current)return;
     revoke();
-    const run={controllers:new Set(),cancelled:false};current=run;
+    const run={controllers:new Set(),waits:new Set(),recovered:new Set(),cancelled:false};current=run;
     start.disabled=true;cancel.hidden=false;progress.value=0;log.textContent='A iniciar…';
     const out={schema_version:'mar-sudoeste-browser-source-snapshot-v1',generated_at_utc:null,forecast_days_requested:16,past_days_requested:3,notes:[
       'Dados brutos por coordenada; NÃO são notas de pesca',
@@ -100,12 +122,12 @@
     const jobs=[];
     for(const [id,c] of Object.entries(BEACHES)){
       out.beaches[id]={coordinate_requested:{latitude:c[0],longitude:c[1]},marine_models:{}};
-      for(const m of MODELS)jobs.push({name:id+' · '+m,run:async()=>{const v=await getModel(c,m,run);out.beaches[id].marine_models[m]=v;return v.ok}});
-      jobs.push({name:id+' · tempo',run:async()=>{const v=await getWeather(c,false,run);out.beaches[id].weather=v;return v.ok}});
-      jobs.push({name:id+' · extras',run:async()=>{const v=await getExtras(c,run);out.beaches[id].extras=v;return v.ok}});
+      for(const m of MODELS){const name=id+' · '+m;jobs.push({name,run:async()=>{const v=await getModel(c,m,run,name);out.beaches[id].marine_models[m]=v;return v.ok}})}
+      {const name=id+' · tempo';jobs.push({name,run:async()=>{const v=await getWeather(c,false,run,name);out.beaches[id].weather=v;return v.ok}})}
+      {const name=id+' · extras';jobs.push({name,run:async()=>{const v=await getExtras(c,run,name);out.beaches[id].extras=v;return v.ok}})}
     }
-    for(const [id,c] of Object.entries(BASIN))jobs.push({name:'Mira · '+id,run:async()=>{const v=await getWeather(c,true,run);out.rain_mira[id]=v;return v.ok}});
-    for(let day=0;day<3;day++)jobs.push({name:'IPMA · dia '+day,run:async()=>{const v=await getIpma(day,run);out.ipma[''+day]=v;return v.ok}});
+    for(const [id,c] of Object.entries(BASIN)){const name='Mira · '+id;jobs.push({name,run:async()=>{const v=await getWeather(c,true,run,name);out.rain_mira[id]=v;return v.ok}})}
+    for(let day=0;day<3;day++){const name='IPMA · dia '+day;jobs.push({name,run:async()=>{const v=await getIpma(day,run,name);out.ipma[''+day]=v;return v.ok}})}
     let next=0,completed=0;
     progress.max=jobs.length;
     counter.textContent='0 / '+jobs.length+' consultas';
@@ -124,8 +146,11 @@
       }
     }
     try{
-      await Promise.all(Array.from({length:5},()=>worker()));
+      await Promise.all(Array.from({length:3},()=>worker()));
       if(run.cancelled){summary.textContent='Recolha cancelada. Não foi exportada uma previsão incompleta.';render('Recolha cancelada.');return}
+      const unavailable=[...new Set(out.errors.map(item=>item.source))];
+      render('Recuperadas após nova tentativa: '+(run.recovered.size?[...run.recovered].join(', '):'nenhuma'));
+      render('Continuam indisponíveis: '+(unavailable.length?unavailable.join(', '):'nenhuma'));
       const good=Object.values(out.beaches).filter(b=>b.weather?.ok && Object.values(b.marine_models).some(m=>m.ok)).length;
       if(good<7){summary.textContent='Falha: apenas '+good+' das 14 zonas têm dados suficientes. Não foi criado um ficheiro enganador. Confere os detalhes e tenta novamente.';render('Menos de 7 zonas com tempo e ondas.');return}
       out.generated_at_utc=new Date().toISOString();
@@ -140,8 +165,8 @@
     finally{current=null;start.disabled=false;cancel.hidden=true}
   }
   start.addEventListener('click',collect);
-  cancel.addEventListener('click',()=>{if(!current)return;current.cancelled=true;current.controllers.forEach(c=>c.abort());summary.textContent='A cancelar as consultas…'});
+  cancel.addEventListener('click',()=>{if(!current)return;current.cancelled=true;current.controllers.forEach(c=>c.abort());current.waits.forEach(cancelWait=>cancelWait());summary.textContent='A cancelar as consultas…'});
   $('collectorImportForecast')?.addEventListener('click',()=>$('forecastFile')?.click());
   $('openCollectorBtn')?.addEventListener('click',()=>{const tab=document.querySelector('.tab[data-tab="collector"]');tab?.click()});
-  window.addEventListener('pagehide',()=>{if(current){current.cancelled=true;current.controllers.forEach(c=>c.abort())}revoke()});
+  window.addEventListener('pagehide',()=>{if(current){current.cancelled=true;current.controllers.forEach(c=>c.abort());current.waits.forEach(cancelWait=>cancelWait())}revoke()});
 })();
