@@ -43,6 +43,9 @@
       run.waits.add(cancel);
     });
   }
+  function markRecovered(run,label,attempt){
+    if(attempt>1){run.recovered.add(label);render('Recuperado · '+label+' · tentativa '+attempt+'/4')}
+  }
   async function getJson(url,run,label){
     for(let attempt=1;attempt<=4;attempt++){
       if(run.cancelled)throw cancelledError();
@@ -54,8 +57,7 @@
         if(!response.ok){const error=new Error('HTTP '+response.status);error.status=response.status;throw error}
         const data=await response.json();
         if(data?.error)throw new Error(data.reason||'Erro API');
-        if(attempt>1){run.recovered.add(label);render('Recuperado · '+label+' · tentativa '+attempt+'/4')}
-        return data;
+        return {data,attempt};
       }catch(error){
         if(run.cancelled)throw cancelledError();
         const temporary=RETRYABLE_STATUS.has(error.status)||error instanceof TypeError||(error.name==='AbortError'&&timedOut);
@@ -72,8 +74,9 @@
       if(run.cancelled)break;
       const url=marine(c,m,vars);
       try{
-        const data=await getJson(url,run,label),cvg=coverage(data,'wave_height');
+        const result=await getJson(url,run,label),data=result.data,cvg=coverage(data,'wave_height');
         if(cvg.points<12)throw new Error('menos de 12 horas válidas');
+        markRecovered(run,label,result.attempt);
         return {ok:true,url,retrieved_at_utc:new Date().toISOString(),coverage:cvg,data};
       }catch(e){problems.push({variables:vars,error:String(e).slice(0,210)})}
     }
@@ -83,23 +86,26 @@
     for(const vars of ['sea_surface_temperature,ocean_current_velocity,ocean_current_direction,sea_level_height_msl','sea_surface_temperature,sea_level_height_msl','sea_surface_temperature']){
       if(run.cancelled)break;
       const url=marine(c,'best_match',vars);
-      try{const data=await getJson(url,run,label);if(data?.hourly?.time?.length)return {ok:true,url,data}}catch(e){if(run.cancelled)throw e}
+      try{const result=await getJson(url,run,label),data=result.data;if(data?.hourly?.time?.length){markRecovered(run,label,result.attempt);return {ok:true,url,data}}}catch(e){if(run.cancelled)throw e}
     }
     return {ok:false,error:'SST / corrente / nível indisponíveis'};
   }
   async function getWeather(c,basin,run,label){
     const url=weather(c,basin);
     try{
-      const data=await getJson(url,run,label);
+      const result=await getJson(url,run,label),data=result.data;
       const cvg=coverage(data,basin?'precipitation':'wind_speed_10m');
-      return {ok:cvg.points>=12,url,data,coverage:cvg};
+      const ok=cvg.points>=12;
+      if(ok)markRecovered(run,label,result.attempt);
+      return {ok,url,data,coverage:cvg};
     }catch(e){return {ok:false,url,error:String(e)}}
   }
   async function getIpma(day,run,label){
     const url='https://api.ipma.pt/open-data/forecast/oceanography/daily/hp-daily-sea-forecast-day'+day+'.json';
     try{
-      const data=await getJson(url,run,label);
+      const result=await getJson(url,run,label),data=result.data;
       const row=(data?.data||[]).find(x=>Number(x.globalIdLocal)===1151326)||null;
+      if(row)markRecovered(run,label,result.attempt);
       return {ok:!!row,url,forecastDate:data.forecastDate,dataUpdate:data.dataUpdate,sines_row:row,error:row?null:'Estação de Sines não encontrada'};
     }catch(e){return {ok:false,url,error:String(e)}}
   }

@@ -91,6 +91,26 @@ test('repete falhas temporárias de rede e assinala pedidos ainda indisponíveis
   assert.match(harness.elements.collectorLog.textContent,/Continuam indisponíveis: santo-andre · tempo/);
 });
 
+test('não marca como recuperada uma resposta repetida que falha a validação dos dados',async()=>{
+  const target='latitude=38.11432&longitude=-8.79823';
+  let targetCalls=0;
+  const fetchImpl=async url=>{
+    if(url.includes(target)&&url.includes('models=ncep_gfswave016')){
+      targetCalls++;
+      if(targetCalls===1)throw new TypeError('ligação interrompida');
+      if(targetCalls===2)return {ok:true,status:200,json:async()=>({hourly:{time:['2026-11-09T00:00'],wave_height:[1]}})};
+    }
+    return {ok:true,status:200,json:async()=>responseFor(url)};
+  };
+  const harness=makeHarness(fetchImpl);
+  await settle(harness);
+  assert.equal(targetCalls,3,'deve usar o grupo de variáveis seguinte após rejeitar os dados insuficientes');
+  assert.match(harness.elements.collectorLog.textContent,/Recuperadas após nova tentativa: nenhuma/);
+  assert.doesNotMatch(harness.elements.collectorLog.textContent,/Recuperado · santo-andre · ncep_gfswave016/);
+  const output=JSON.parse(await harness.exportedBlob.text());
+  assert.equal(output.beaches['santo-andre'].marine_models.ncep_gfswave016.ok,true);
+});
+
 test('o botão cancelar interrompe imediatamente uma espera de nova tentativa',async()=>{
   const harness=makeHarness(async()=>({ok:false,status:503,json:async()=>({})}),{holdRetryTimers:true});
   const collection=harness.elements.collectorStart.click();
