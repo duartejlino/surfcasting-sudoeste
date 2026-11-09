@@ -19,13 +19,15 @@
  <label for="globalActivity"><span>ATIVIDADE</span><select id="globalActivity">
  <option value="surfcasting">Surfcasting</option><option value="surf">Surf</option><option value="spinning">Pesca spinning</option><option value="sub">Caça submarina</option><option value="mare">Ir à maré</option></select></label>
  <label id="surfLevelWrap" for="globalSurfLevel" hidden><span>NÍVEL DE SURF</span><select id="globalSurfLevel"><option value="iniciante">Iniciante</option><option value="intermedio" selected>Intermédio</option><option value="experiente">Experiente</option></select></label>
- <div class="global-context" id="globalActivityContext" role="status">Todas as páginas são filtradas pela atividade escolhida.</div>
+ <div class="global-context" id="globalActivityContext" role="status">O filtro aplica-se às oportunidades; a água e as algas têm observações próprias por zona.</div>
 </div>
 <nav class="tabs" aria-label="Secções">
   <button class="tab active" data-tab="dashboard">Resumo</button>
   <button class="tab" data-tab="calendar">Oportunidades</button>
+  <button class="tab" data-tab="collector">Atualizar dados</button>
   <button class="tab" data-tab="reasoning">Raciocínio</button>
   <button class="tab" data-tab="beaches">Praias</button>
+  <button class="tab" data-tab="water49">Água e algas</button>
   <button class="tab" data-tab="history">Histórico</button>
   <button class="tab" data-tab="insights">Aprendizagem</button>
   <button class="tab" data-tab="about">Modelo</button>
@@ -36,14 +38,44 @@
   <div id="status" class="status">A carregar dados…</div>
 <div class="card live-data-box manual-data-box" aria-label="Previsão gerada no ChatGPT">
     <div><div class="eyebrow">PREVISÃO POR FICHEIRO · SEM API PAGA</div><h3>O ChatGPT analisa. A app apresenta.</h3>
-      <p>Quando quiseres previsões novas, pede nesta conversa <strong>“Atualiza o Mar Sudoeste”</strong>. Eu comparo as fontes disponíveis e entrego um <code>forecast.json</code> com as notas, justificações e auditoria das fontes. Depois importas esse ficheiro aqui.</p>
-      <p class="muted">Não existem consultas nem cálculos automáticos em segundo plano. A app preserva o teu histórico neste dispositivo. Marés oficiais de Sines disponíveis para novembro de 2026; segurança, acessos, visibilidade e regras locais têm sempre de ser confirmados.</p>
+      <p>Para recolher dados meteorológicos novos das 14 zonas, abre <strong>Atualizar dados → Recolher agora</strong>. Envia o ficheiro de fontes ao ChatGPT para gerar o forecast com as notas e justificações e importa o <code>forecast.json</code> recebido.</p>
+      <p class="muted">A recolha só acontece quando carregas no botão. O cálculo das notas continua a depender da importação do forecast gerado por IA. A app preserva o teu histórico neste dispositivo. Marés oficiais de Sines disponíveis para novembro de 2026; segurança, acessos, visibilidade e regras locais têm sempre de ser confirmados.</p>
     </div>
-    <div class="live-actions"><button type="button" class="primary" id="importForecastMainBtn">Importar forecast.json</button><p id="manualForecastStatus" role="status" class="muted">A verificar a data da previsão guardada…</p></div>
+    <div class="live-actions"><button type="button" class="primary" id="openCollectorBtn">Recolher dados novos</button><button type="button" class="secondary" id="importForecastMainBtn">Importar forecast.json</button><p id="manualForecastStatus" role="status" class="muted">A verificar a data da previsão guardada…</p></div>
   </div>
   <div class="hero card"><div class="eyebrow">MELHOR OPORTUNIDADE</div><h2 id="bestTitle">—</h2><div class="hero-meta"><span id="bestScore" class="score-pill">—</span><span id="bestConfidence" class="confidence-pill">—</span><span id="bestWhen">—</span></div><p id="bestReason"></p><button id="openBestReason" class="link-btn">Ver todo o raciocínio →</button></div>
   <div class="stats-grid"><div class="card stat"><span>Saídas</span><strong id="statTrips">0</strong></div><div class="card stat"><span id="statOutcomeLabel">Capturas</span><strong id="statFish">0</strong></div><div class="card stat"><span>Melhor praia real</span><strong id="statBeach">Sem dados</strong></div><div class="card stat"><span>Melhor período real</span><strong id="statPeriod">Sem dados</strong></div></div>
   <div class="card"><h3>Top oportunidades</h3><div id="topOpportunities" class="opportunities"></div></div>
+</section>
+
+<section id="collector" class="panel" aria-label="Atualizar fontes meteorológicas">
+  <div class="card collector-intro">
+    <div><div class="eyebrow">ATUALIZAÇÃO NO PRÓPRIO SITE</div><h2>Recolher dados do mar</h2><p>Consulta, diretamente daqui, as fontes para as <strong>14 zonas</strong>: 4 modelos de ondas, vento, meteorologia, chuva na bacia do Mira e controlo diário do IPMA.</p></div>
+    <span class="collector-chip">Sem conta nem API paga</span>
+  </div>
+  <div class="card collector-main">
+    <div class="collector-flow" aria-label="Passos para atualizar o Mar Sudoeste">
+      <div><span>1</span><strong>Recolher fontes</strong><small>Consultar APIs públicas</small></div>
+      <div><span>2</span><strong>Enviar JSON ao ChatGPT</strong><small>Calcular notas das 5 atividades</small></div>
+      <div><span>3</span><strong>Importar forecast</strong><small>Ver novas oportunidades</small></div>
+    </div>
+    <div class="collector-actions">
+      <button id="collectorStart" type="button" class="primary">Recolher dados agora</button>
+      <button id="collectorCancel" type="button" class="secondary" hidden>Cancelar</button>
+      <a id="collectorDownload" class="collector-download" download hidden>Descarregar JSON das fontes</a>
+      <button id="collectorImportForecast" type="button" class="secondary">Importar forecast calculado</button>
+    </div>
+    <p id="collectorSummary" role="status" aria-live="polite" class="collector-summary">Pronto para recolher. Mantém o site aberto durante as consultas, especialmente no telemóvel.</p>
+    <progress id="collectorProgress" max="90" value="0" aria-label="Progresso da recolha"></progress>
+    <div id="collectorProgressLabel" class="collector-progress-label">0 / 90 consultas</div>
+    <details class="collector-details"><summary>Ver detalhes da recolha</summary><pre id="collectorLog" aria-live="polite">Ainda não começou.</pre></details>
+  </div>
+  <div class="card collector-guide">
+    <h3>Depois de recolher</h3>
+    <p>Descarrega o ficheiro <code>Mar_Sudoeste_FONTES_AAAA-MM-DD.json</code>, envia-o nesta conversa e pede <strong>«Atualiza o Mar Sudoeste com estas fontes»</strong>. Receberás outro ficheiro, com as notas calculadas, que podes importar pelo botão acima.</p>
+    <p class="muted"><strong>Atenção:</strong> o JSON das fontes contém dados brutos, <em>não</em> é um <code>forecast.json</code> nem altera as classificações da aplicação. Se houver falhas de API, serão mostradas; a cobertura e a confiança podem variar por modelo e dia. Não são medidos no local ondas de rebentação, visibilidade debaixo de água ou algas soltas.</p>
+    <p class="muted">Consultas feitas a <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (NOAA, ECMWF, DWD e Météo-France) e <a href="https://api.ipma.pt/" target="_blank" rel="noopener">IPMA</a>. Dados recolhidos somente ao carregares no botão, no teu navegador; não são enviados para os nossos servidores. Surfline e Windguru não são recolhidos automaticamente.</p>
+  </div>
 </section>
 
 <section id="calendar" class="panel">
@@ -95,9 +127,37 @@
   <div class="controls card"><label>Praia<select id="reasonBeach"></select></label><label>Data<select id="reasonDate"></select></label><label>Período<select id="reasonPeriod"></select></label><label class="species-only">Espécie<select id="reasonSpecies"><option>Geral</option><option>Robalo</option><option>Sargo</option><option>Dourada</option></select></label></div>
   <div class="detail-grid"><div class="card"><div class="eyebrow">NOTA FINAL</div><div class="big-score" id="reasonScore">—</div><div id="reasonConfidence" class="confidence-line">—</div><p id="reasonSummary"></p><div class="callout"><strong>Porque não é 10/10</strong><div id="whyNot10"></div></div></div><div class="card"><h3>O que faria a nota mudar?</h3><div id="sensitivities" class="sensitivities"></div></div></div>
   <div class="card"><h3 id="factorHeading">Contributo fator a fator</h3><p class="muted" id="factorIntro">Impacto = nota do fator × peso. Podes ver o dado, peso, fonte, confiança e justificação individual.</p><div id="factorList" class="factor-list"></div></div><div class="card"><h3>Auditoria: valores por modelo</h3><p class="muted">Não são múltiplos votos de websites: são centros de previsão identificados e horários comparáveis.</p><div id="sourceAudit">Consulta a atualizar…</div></div>
+<div id="water49ReasonPanel" class="card water49-reason-card" hidden></div>
 </section>
 
 <section id="beaches" class="panel"><p class="spot-catalog-explainer">O catálogo inclui novos locais identificados no Surfnerd, Surfline e cartografia oficial. <strong>“Sem previsão própria”</strong> significa que ainda não existe nota calculada para esse local — não significa condições boas ou más. A seleção de atividade continua a filtrar as zonas.</p><div class="controls card"><label>Praia<select id="beachSelect"></select></label></div><div id="beachGuide" class="beach-guide"></div></section>
+
+
+<section id="water49" class="panel">
+  <div class="card water49-head"><div class="eyebrow">NOVA CAMADA · V4.9</div><h2>Visibilidade e algas</h2>
+    <p>Dois sinais independentes da nota da atividade. <strong>Tendência de visibilidade ≠ metros observados</strong>; sem relato local, <strong>algas = desconhecido</strong>. Nenhum destes indicadores substitui a verificação presencial nem é garantia de segurança.</p></div>
+  <div class="card water49-controls"><label>Praia<select id="water49Beach"></select></label><label>Dia<select id="water49Date"></select></label><label>Período<select id="water49Period"></select></label></div>
+  <div id="water49Summary" class="water49-grid" aria-live="polite"></div>
+  <div class="card water49-how" id="water49Reasoning"></div>
+  <div class="card"><h3>Registar o que viste no local</h3><p class="muted">Registo simples, mesmo sem teres ido pescar ou mergulhar. A informação fica <strong>neste dispositivo</strong> e só é usada como observação da zona indicada. Algas à deriva e algas fixas são tratadas de forma diferente.</p>
+    <form id="water49Form" class="water49-form">
+      <label>Praia<select id="water49ReportBeach" required></select></label>
+      <label>Data e hora locais<input type="datetime-local" id="water49ReportAt" required></label>
+      <label>Visibilidade horizontal (metros, se medida)<input id="water49ReportMeters" type="number" min="0" max="40" step="0.5" placeholder="— não observada"></label>
+      <label>Algas observadas<select id="water49ReportAlgae"><option value="unknown">Não observei / não sei</option><option value="none">Não vi algas problemáticas</option><option value="few">Poucas</option><option value="moderate">Moderadas / atrapalhavam</option><option value="many">Muitas / impediam a atividade</option></select></label>
+      <label>Tipo de algas<select id="water49ReportType"><option value="unknown">Não sei / não aplicável</option><option value="drift">Soltas / à deriva</option><option value="floating">À superfície</option><option value="attached">Fixas no fundo</option><option value="plankton">Água esverdeada / suspeita de microalgas</option></select></label>
+      <label class="wide">Notas<textarea id="water49ReportNotes" rows="2" maxlength="600" placeholder="Ex.: algas a prender o anzol; água acastanhada; visibilidade entre pedras…"></textarea></label>
+      <div class="wide actions"><button class="primary" type="submit">Guardar observação</button><button type="button" id="water49Export">Exportar dados de água/algas</button><label class="file-btn">Importar observações<input id="water49ReportFile" type="file" accept=".json,application/json"></label></div>
+    </form><p id="water49Message" class="muted" role="status"></p>
+    <div id="water49Reports" class="water49-reports"></div>
+  </div>
+  <details class="card water49-extra"><summary>Dados de satélite e fontes externas</summary>
+    <p>O Copernicus Marine tem dados de <strong>turbidez, partículas em suspensão e clorofila</strong> para a costa ibérica. Esta versão <strong>não os descarrega automaticamente</strong>. Podes importar um JSON com observações georreferenciadas, data e proveniência; clorofila <em>não</em> significa algas soltas.</p>
+    <label class="file-btn">Importar observações de qualidade da água<input id="water49SatelliteFile" type="file" accept=".json,application/json"></label>
+    <p id="water49SatStatus" class="muted" role="status">Sem observações satélite importadas.</p>
+    <p><a href="https://data.marine.copernicus.eu/product/OCEANCOLOUR_IBI_BGC_HR_L3_NRT_009_204/description" target="_blank" rel="noopener">Copernicus Marine — produto ibérico de turbidez, partículas e clorofila</a></p>
+  </details>
+</section>
 
 <section id="history" class="panel">
   <div class="card"><h3>Registar saída</h3><p class="muted">O histórico é o que permite corrigir o modelo com os teus resultados reais. A saída guarda também o snapshot da previsão usada naquele momento.</p>
@@ -114,7 +174,7 @@
 
 <section id="insights" class="panel"><div class="card"><h3>Aprendizagem com as tuas atividades</h3><label class="insight-select" hidden> Analisar atividade <select id="insightActivity"><option value="surfcasting">Surfcasting</option><option value="surf">Surf</option><option value="spinning">Pesca spinning</option><option value="sub">Caça submarina</option><option value="mare">Ir à maré</option></select></label><p id="insightHeadline">Ainda não há dados suficientes.</p></div><div class="insight-grid"><div class="card"><h3>Por praia</h3><div id="beachInsights"></div></div><div class="card"><h3>Por período</h3><div id="periodInsights"></div></div><div class="card"><h3>Condições das capturas</h3><div id="conditionInsights"></div></div><div class="card"><h3>Previsão vs realidade</h3><div id="modelInsights"></div></div></div></section>
 
-<section id="about" class="panel"><div class="card prose"><h3>Princípio do motor</h3><p>O filtro de atividade no topo aplica-se ao Resumo, Oportunidades, Comparação, Raciocínio, Praias, Histórico e Aprendizagem. Cada atividade tem critérios diferentes; a mesma nota numérica não implica que a atividade seja segura.</p><p>O ChatGPT é o motor de análise externo: faz a recolha das fontes quando pedes uma atualização e gera um novo <code>forecast.json</code>. A app não consulta as APIs meteorológicas nem altera as pontuações por iniciativa própria. Apenas apresenta e guarda o raciocínio importado, incluindo auditoria de fontes quando o ficheiro a contém.</p><h3>Atualização por IA</h3><p>Pede nesta conversa <strong>“Atualiza o Mar Sudoeste”</strong>, descarrega o ficheiro JSON e escolhe <strong>Importar atualização IA</strong>. Para aprender com as tuas saídas, usa <strong>Histórico → Exportar histórico para ChatGPT</strong> e envia o ficheiro aqui. A importação não envia dados para nenhum servidor; o histórico fica neste navegador até o exportares.</p><h3>Pesos atuais da atividade escolhida</h3><div id="weightsList"></div><details class="tide-sheet" id="tideDetails"><summary>Marés oficiais de Sines · novembro 2026</summary><div id="officialTidesOverview"></div></details><div class="activity-safety"><h3>Segurança e legalidade</h3><p>As notas são potencial ambiental, nunca autorização nem garantia de condições seguras. Visibilidade debaixo de água, correntes, acessos às rochas, zonas protegidas, licenças e regras de apanha têm de ser confirmadas no local e junto das autoridades competentes. Nunca uses uma nota para justificar entrada numa zona exposta.</p><div class="activity-links"><a target="_blank" rel="noopener" href="https://dgrm.pt/pt/web/guest/licencas">DGRM · Licenças</a><a target="_blank" rel="noopener" href="https://www.dgrm.pt/zonas-de-pesca">DGRM · Restrições de zonas</a></div></div><h3>Limitações assumidas</h3><ul><li>Bancos e canais de areia são dinâmicos e não são observados automaticamente.</li><li>O motor agora incorpora a tabela oficial de Sines (IH 2026) para a altura da baixa-mar, amplitude e fase da maré. A previsão regional não substitui a observação da costa nem as regras locais.</li><li>A confiança é mostrada separadamente da nota para não fingir precisão.</li></ul></div></section>
+<section id="about" class="panel"><div class="card prose"><h3>Princípio do motor</h3><p>O filtro de atividade no topo aplica-se ao Resumo, Oportunidades, Comparação, Raciocínio, Praias, Histórico e Aprendizagem. O novo separador Água e algas mostra uma camada ambiental independente. Cada atividade tem critérios diferentes; a mesma nota numérica não implica que a atividade seja segura.</p><p>O ChatGPT continua a ser o motor externo de classificação: gera um novo <code>forecast.json</code> a partir das fontes recolhidas. O separador Atualizar dados já consulta diretamente as APIs meteorológicas quando carregas em Recolher dados; a app não recalcula automaticamente as notas. Por precaução, a v4.8 aplica um travão explícito de surfabilidade às notas de SURF importadas quando a ondulação prevista é insuficiente para uma rebentação consistente; mostra a nota original, o teto e a justificação. As notas de pesca não são alteradas automaticamente por uma observação de falta de ondas. A v4.9 acrescenta estimativa de tendência da visibilidade com dados do mar atual e das 72 horas anteriores, sem inferir metros de visão. Alguma turbidez por satélite pode ser importada mas não é recolhida automaticamente. Algas soltas não são deduzidas da clorofila nem da ondulação: aparecem como desconhecidas até haver um relato local, que pode limitar temporariamente recomendações de pesca e caça submarina. A leitura do mar por atividade da v4.8 é preservada. O resto do raciocínio e auditoria das fontes é preservado.</p><h3>Atualização por IA</h3><p>Abre <strong>Atualizar dados → Recolher dados agora</strong>, descarrega o JSON de fontes e envia-o nesta conversa com o pedido <strong>“Atualiza o Mar Sudoeste”</strong>. Depois importa o forecast calculado com <strong>Importar atualização IA</strong>. Para aprender com as tuas saídas, usa <strong>Histórico → Exportar histórico para ChatGPT</strong> e envia o ficheiro aqui. A importação não envia dados para nenhum servidor; o histórico fica neste navegador até o exportares.</p><h3>Pesos atuais da atividade escolhida</h3><div id="weightsList"></div><details class="tide-sheet" id="tideDetails"><summary>Marés oficiais de Sines · novembro 2026</summary><div id="officialTidesOverview"></div></details><div class="activity-safety"><h3>Segurança e legalidade</h3><p>As notas são potencial ambiental, nunca autorização nem garantia de condições seguras. Visibilidade debaixo de água, correntes, acessos às rochas, zonas protegidas, licenças e regras de apanha têm de ser confirmadas no local e junto das autoridades competentes. Nunca uses uma nota para justificar entrada numa zona exposta.</p><div class="activity-links"><a target="_blank" rel="noopener" href="https://dgrm.pt/pt/web/guest/licencas">DGRM · Licenças</a><a target="_blank" rel="noopener" href="https://www.dgrm.pt/zonas-de-pesca">DGRM · Restrições de zonas</a></div></div><h3>Limitações assumidas</h3><ul><li>Bancos e canais de areia são dinâmicos e não são observados automaticamente.</li><li>O motor agora incorpora a tabela oficial de Sines (IH 2026) para a altura da baixa-mar, amplitude e fase da maré. A previsão regional não substitui a observação da costa nem as regras locais.</li><li>A confiança é mostrada separadamente da nota para não fingir precisão.</li></ul></div></section>
 </main>
 <footer>Mar Sudoeste • previsões indicativas • confirma segurança, maré e permissões no local.
   <div>Previsões oceanográficas via <a href="https://open-meteo.com/en/docs/marine-weather-api" target="_blank" rel="noopener">Open-Meteo Marine</a>: NOAA/NCEP GFS Wave, ECMWF WAM e DWD EWAM.
@@ -123,6 +183,8 @@
    marés <a href="https://loja.hidrografico.pt/ln/web/wp-content/uploads/2023/11/TabelaMare_I_2026_signed.pdf" target="_blank" rel="noopener">Instituto Hidrográfico (Sines 2026)</a>.
    O índice de confiança é heurístico, não uma taxa de acerto validada.</div></footer>
 <script src="spot_catalog.js"></script>
+<script src="water_quality.js"></script>
 <script src="app.js"></script>
+<script src="collector.js"></script>
 
 </body></html>

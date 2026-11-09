@@ -1,3 +1,9 @@
+# v5.0 — Recolher fontes dentro do site
+
+1. Abrir o separador **Atualizar dados**, carregar **Recolher dados agora** e descarregar o JSON de fontes.
+2. Enviar o JSON ao ChatGPT nesta conversa e pedir novo forecast.
+3. Na aplicação, importar o forecast IA calculado. As notas não mudam apenas por recolher dados brutos.
+
 # Atualizações manuais do Mar Sudoeste
 
 ## Um pedido basta

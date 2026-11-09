@@ -190,3 +190,58 @@ main{max-width:none;width:100%;padding:clamp(12px,1.35vw,26px)}
 }
 @media(max-width:340px){#calendar .calendar-controls label{min-width:100%;flex-basis:100%}.radar-kpis{grid-template-columns:1fr 1fr}.radar-kpis .radar-kpi:last-child{grid-column:1/-1}}
 @media(prefers-reduced-motion:reduce){.radar-bar-fill{transition:none}}
+
+/* v4.7: explicar regra de bloqueio da surfabilidade no detalhe. */
+.calibration-gate{padding:12px;border-left:3px solid var(--accent, #268aa2);background:rgba(100,140,160,.10);border-radius:7px;margin-top:10px}
+
+/* Mar Sudoeste v4.9 · água e algas */
+.water49-head h2{margin:5px 0 8px}.water49-head p{max-width:1050px;font-size:14px;line-height:1.6}
+.water49-controls,.water49-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.water49-controls label,.water49-form label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;min-width:0}
+.water49-form{grid-template-columns:repeat(2,minmax(0,1fr))}
+.water49-form .wide{grid-column:1/-1}
+.water49-form input,.water49-form select,.water49-form textarea,.water49-controls select{max-width:100%;min-width:0;min-height:42px;border:1px solid var(--border);border-radius:9px;padding:9px;background:white;color:var(--text);font:inherit}
+.water49-form textarea{min-height:65px}
+.water49-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0}
+.water49-item{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:16px;min-width:0}
+.water49-item h3{margin:7px 0;font-size:19px}.water49-item p{font-size:13px;line-height:1.55;margin:7px 0;color:var(--muted)}
+.water49-item .water49-kicker{font-weight:800;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+.water49-state{font-size:12px;font-weight:800;color:#745d2b}
+.water49-state.calm{color:#247a61}.water49-state.hard{color:#a14436}
+.water49-how p,.water49-reason-card p{font-size:13px;line-height:1.55}
+.water49-how ul{padding-left:20px;font-size:12px;line-height:1.55}
+.water49-chips{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+.water49-chip{border-radius:7px;font-size:11px;font-weight:700;border:1px solid #bed0cb;background:#f5faf8;color:#315e62;padding:4px 7px;min-width:0;white-space:normal}
+.water49-chip.warn{color:#885736;border-color:#e6caa5;background:#fff8ec}
+.water49-chip.unknown{color:#6c7480;border-color:#d7dce1;background:#f7f8f9}
+.water49-reports{display:grid;gap:7px;margin-top:12px}
+.water49-report{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:9px;border-top:1px solid var(--border);font-size:12px}
+.water49-report>div{min-width:0;flex:1}.water49-report button{flex:none;min-height:36px}
+.water49-extra summary{cursor:pointer;font-weight:800;padding:6px}.water49-extra p{font-size:12px;line-height:1.5}
+@media(max-width:680px){.water49-grid{grid-template-columns:1fr}.water49-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.water49-form{grid-template-columns:1fr}.water49-form .wide{grid-column:auto}}
+@media(max-width:380px){.water49-controls{grid-template-columns:1fr}}
+
+
+/* v5.0 — Recolha integrada; responsivo em Android e desktop */
+.collector-intro{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:12px}
+.collector-intro h2{margin:2px 0 6px;font-size:clamp(22px,3vw,30px)}
+.collector-intro p{max-width:830px;margin:0;color:var(--muted)}
+.collector-chip{white-space:nowrap;border:1px solid var(--border);border-radius:999px;background:#eef7f3;color:#236354;padding:6px 10px;font-size:12px;font-weight:750}
+.collector-main,.collector-guide{margin-bottom:12px}
+.collector-flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.collector-flow>div{border:1px solid var(--border);background:#f8fbfa;border-radius:12px;padding:12px;min-width:0;display:grid;grid-template-columns:32px minmax(0,1fr);grid-template-rows:auto auto;column-gap:9px}
+.collector-flow span{grid-row:1/3;border-radius:50%;background:var(--accent);color:#fff;width:30px;height:30px;display:grid;place-items:center;font-size:13px;font-weight:850}
+.collector-flow strong{line-height:1.2;font-size:13px;align-self:end}
+.collector-flow small{font-size:11px;color:var(--muted);margin-top:4px}
+.collector-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.collector-actions button,.collector-download{min-height:46px;font-size:14px;font-weight:750;white-space:normal}
+.collector-download{border-radius:10px;padding:10px 14px;background:#dff2ea;color:#18594b;border:1px solid #a9d4c2;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.collector-main progress{width:100%;height:13px;accent-color:var(--accent);display:block;margin-top:15px}
+.collector-summary{font-size:14px;line-height:1.6;margin:13px 0 5px}
+.collector-progress-label{font-size:12px;color:var(--muted);margin-top:5px}
+.collector-details{border-top:1px solid var(--border);margin-top:16px;padding-top:12px}
+.collector-details summary{cursor:pointer;font-weight:750}
+.collector-details pre{white-space:pre-wrap;word-break:break-word;font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;border-radius:11px;background:#f3f7f6;padding:13px;max-height:260px;overflow:auto}
+.collector-guide p{line-height:1.65}
+.collector-guide code{overflow-wrap:anywhere}
+@media(max-width:700px){.collector-intro{display:block}.collector-chip{display:inline-block;margin-top:12px}.collector-flow{grid-template-columns:1fr;gap:7px}.collector-flow>div{padding:9px}.collector-actions{display:grid;grid-template-columns:1fr}.collector-actions button,.collector-download{width:100%}}

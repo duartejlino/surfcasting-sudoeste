@@ -1,3 +1,9 @@
+# Mar Sudoeste v5.0 — Recolha integrada no site
+
+**Novo:** na aplicação, o separador **Atualizar dados** recolhe as fontes meteorológicas das 14 zonas diretamente no browser (Android ou computador). Exporta `Mar_Sudoeste_FONTES_AAAA-MM-DD.json`, que podes enviar ao ChatGPT para gerar um `forecast.json` com notas das cinco atividades. A recolha das fontes **não atualiza automaticamente** as notas; continua a ser necessário importar o forecast IA produzido. Consulta [LEIA_ME_V50_RECOLHA_INTEGRADA.md](LEIA_ME_V50_RECOLHA_INTEGRADA.md) para instruções de instalação, utilização e limitações.
+
+---
+
 # Mar Sudoeste v4.5 · Filtro global e catálogo ampliado
 
 A v4.4 usa **um seletor global no topo**: Surfcasting, Surf, Pesca spinning, Caça submarina e Ir à maré. A escolha governa **Resumo, Calendário diário/mensal, Comparação de praias, Raciocínio, Praias, Histórico, Aprendizagem e pesos no Modelo**.
