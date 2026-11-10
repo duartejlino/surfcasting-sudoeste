@@ -2,6 +2,10 @@
 
 **Novo:** na aplicação, o separador **Atualizar dados** recolhe as fontes meteorológicas das 14 zonas diretamente no browser (Android ou computador). Exporta `Mar_Sudoeste_FONTES_AAAA-MM-DD.json`, que podes enviar ao ChatGPT para gerar um `forecast.json` com notas das cinco atividades. A recolha das fontes **não atualiza automaticamente** as notas; continua a ser necessário importar o forecast IA produzido. Consulta [LEIA_ME_V50_RECOLHA_INTEGRADA.md](LEIA_ME_V50_RECOLHA_INTEGRADA.md) para instruções de instalação, utilização e limitações.
 
+## Automação por GitHub Actions
+
+O workflow proposto em `.github/workflows/update-forecast.yml` recolhe e calcula uma previsão determinística de seis em seis horas, com disparo manual opcional. Não usa OpenAI nem API paga. A importação IA e o recolhedor do navegador continuam disponíveis e independentes. O motor automático mantém lacunas explícitas e não afirma equivalência à análise humana. Consulta [AUTOMATION.md](AUTOMATION.md) para ativação, limites gratuitos, política de falhas e testes.
+
 ---
 
 # Mar Sudoeste v4.5 · Filtro global e catálogo ampliado

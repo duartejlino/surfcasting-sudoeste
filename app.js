@@ -108,7 +108,22 @@ function sanitizeHistory(rows){return (Array.isArray(rows)?rows:[]).map(h=>({...
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const labelScore=v=>v>=8.5?'Excelente':v>=7.5?'Muito bom':v>=6.5?'Bom':v>=5.5?'Razoável':'Fraco';
 function setStatus(msg){$('#status').textContent=msg}
-async function loadForecast(){let data=null;try{data=await readForecastOverride()}catch(err){console.warn('Previsão guardada indisponível:',err)}if(!data){const r=await fetch('data/forecast.json',{cache:'no-store'});if(!r.ok)throw new Error('forecast.json indisponível');data=await r.json()}validateForecast(data);data=addAdditionalSpotCatalog(enrichForecast(sanitizeForecast(data)));APP.forecast=data;prepareActivityIndex(data);forecastStatus(data);APP.selection.date=pickForecastDate(data);APP.selection.beach=Object.keys(data.beaches)[0];populateSelectors();syncActivityHistoryFields();renderAll();setStatus('Dados carregados. Abre qualquer nota para ver o raciocínio completo.')}
+async function loadForecast(){let data=null;try{data=await readForecastOverride()}catch(err){console.warn('Previsão guardada indisponível:',err)}if(!data){const r=await fetch('data/forecast.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('forecast.json indisponível');data=await r.json()}validateForecast(data);data=addAdditionalSpotCatalog(enrichForecast(sanitizeForecast(data)));APP.forecast=data;prepareActivityIndex(data);forecastStatus(data);APP.selection.date=pickForecastDate(data);APP.selection.beach=Object.keys(data.beaches)[0];populateSelectors();syncActivityHistoryFields();renderAll();await loadAutomationStatus(data);setStatus('Dados carregados. Abre qualquer nota para ver o raciocínio completo.')}
+function localPortugal(value){if(!value||!Number.isFinite(Date.parse(value)))return '—';return new Date(value).toLocaleString('pt-PT',{timeZone:'Europe/Lisbon',dateStyle:'short',timeStyle:'short'})}
+async function loadAutomationStatus(forecast){
+ const box=$('#automationStatus');if(!box)return;
+ try{
+  const response=await fetch('data/status.json?ts='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('status indisponível');
+  const state=await response.json(),stamp=Date.parse(state.last_valid_forecast_at||forecast.generated_at),hours=Math.max(0,(Date.now()-stamp)/3600000);
+  $('#automationCollected').textContent=localPortugal(state.collection?.at);
+  $('#automationCalculated').textContent=localPortugal(state.last_valid_forecast_at);
+  $('#automationPublished').textContent=localPortugal(state.publication?.at);
+  $('#automationAge').textContent=Number.isFinite(hours)?(hours<1?'< 1 h':Math.floor(hours)+' h'):'—';
+  const partial=state.collection?.status==='partial'||(state.incomplete_sources||[]).length>0,stale=state.stale||hours>12;
+  $('#automationWarning').textContent=state.errors?.length?'A última tentativa falhou; mantém-se a última previsão válida. '+state.errors.at(-1).message:stale?'Previsão desatualizada. Mantém-se a última versão válida; confirma as condições antes de decidir.':partial?'Previsão válida com fontes incompletas identificadas na auditoria.':'Recolha, cálculo e preparação da publicação concluídos.';
+  box.classList.toggle('automation-alert',!!(state.errors?.length||stale));box.classList.toggle('automation-partial',partial&&!stale);
+ }catch(error){box.classList.add('automation-alert');$('#automationWarning').textContent='Não foi possível obter o estado automático. A data do forecast carregado continua visível acima.'}
+}
 function validateForecast(d){
  if(!d||d.schema_version!==3||!Array.isArray(d.evaluations)||!d.evaluations.length||!d.beaches||Array.isArray(d.beaches)||typeof d.beaches!=='object')throw new Error('Formato inválido: é necessário forecast.json com schema_version=3, praias e avaliações.');
  if(!d.generated_at||!Number.isFinite(Date.parse(d.generated_at)))throw new Error('O ficheiro não contém uma data de geração válida.');

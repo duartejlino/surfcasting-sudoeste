@@ -1,0 +1,11 @@
+{
+  "schema_version": "mar-sudoeste-automation-status-v1",
+  "run_started_at": null,
+  "collection": {"status": "not_run", "at": null},
+  "calculation": {"status": "not_run", "at": null},
+  "publication": {"status": "not_run", "at": null},
+  "last_valid_forecast_at": "2026-11-03T14:45:00+00:00",
+  "stale": true,
+  "incomplete_sources": [],
+  "errors": []
+}

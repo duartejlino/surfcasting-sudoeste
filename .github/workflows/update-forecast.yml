@@ -1,0 +1,53 @@
+name: Atualizar previsão
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mar-sudoeste-forecast
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Obter repositório
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Validar Python e JavaScript
+        run: |
+          python -m py_compile collect_sources_14_spots.py automation/*.py
+          node --check app.js
+          node --check collector.js
+          node --check sw.js
+
+      - name: Recolher, calcular e validar
+        id: update
+        continue-on-error: true
+        run: python automation/update_forecast.py
+
+      - name: Registar alterações quando existirem
+        id: commit
+        run: |
+          if git diff --quiet -- forecast.json data/forecast.json status.json data/status.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add forecast.json data/forecast.json status.json data/status.json
+          git commit -m "chore: atualizar previsão automática [skip ci]"
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Assinalar falha depois de preservar o forecast anterior
+        if: steps.update.outcome != 'success'
+        run: exit 1
