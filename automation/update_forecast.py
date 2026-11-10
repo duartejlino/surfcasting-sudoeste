@@ -38,7 +38,7 @@ def main():
             status['publication']={'status':'dry_run','at':previous.get('publication',{}).get('at')}; print(json.dumps(status,ensure_ascii=False,indent=2)); return 0
         for destination in (ROOT/'forecast.json',ROOT/'data'/'forecast.json'):
             copy=destination.with_suffix(destination.suffix+'.tmp'); shutil.copyfile(candidate,copy); copy.replace(destination)
-        status['publication']={'status':'ready_for_commit','at':generated}; write_status(status)
+        status['publication']={'status':'prepared','prepared_at':generated,'at':previous.get('publication',{}).get('at')}; write_status(status)
         print(json.dumps(status,ensure_ascii=False,indent=2)); return 0
     except Exception as exc:
         status['errors'].append({'at':now(),'message':str(exc)[:600]}); status['calculation']['status']='failed' if status['calculation']['status']=='pending' else status['calculation']['status']; status['publication']['status']='previous_forecast_preserved'; status['stale']=True

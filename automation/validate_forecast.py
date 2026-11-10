@@ -8,6 +8,13 @@ PERIODS={'Madrugada','Amanhecer','Manhã','Tarde','Anoitecer','Noite'}
 SPECIES={'Geral','Robalo','Sargo','Dourada'}
 ACTIVITIES={'surf','spinning','sub','mare'}
 SURFCASTING_BEACHES={'santo-andre','sao-torpes','porto-covo','aivados','malhao','furnas-mira','areao','morgavel','vieirinha','ilha-pessegueiro','farol-milfontes'}
+ACTIVITY_BEACHES={
+ 'surf':{'santo-andre','sao-torpes','porto-covo','aivados','malhao','areao','vieirinha','burrinho','ilha-pessegueiro','farol-milfontes'},
+ 'spinning':{'santo-andre','sao-torpes','porto-covo','aivados','malhao','furnas-mira','samoqueira','areao','morgavel','vieirinha','burrinho','ilha-pessegueiro','patacho','farol-milfontes'},
+ 'sub':{'sao-torpes','porto-covo','samoqueira','aivados','malhao','burrinho','ilha-pessegueiro'},
+ 'mare':{'sao-torpes','porto-covo','samoqueira','malhao','burrinho','ilha-pessegueiro'},
+}
+CRITICAL_CONDITIONS={'wave_offshore_m','wave_period_s','wind_kmh','coverage_expected_hours','daylight_fraction'}
 
 def iso(value):
     try: dt.datetime.fromisoformat(str(value).replace('Z','+00:00')); return True
@@ -30,6 +37,8 @@ def validate(data):
         try: dt.date.fromisoformat(e.get('date',''))
         except ValueError: errors.append(f'avaliação {index} com data inválida')
         if not isinstance(e.get('score'),(int,float)) or not math.isfinite(e['score']) or not 0<=e['score']<=10: errors.append(f'avaliação {index} com nota inválida')
+        conditions=e.get('conditions') or {}
+        if any(name not in conditions or conditions[name] is None for name in CRITICAL_CONDITIONS): errors.append(f'avaliação {index} com cobertura crítica oculta')
         factors=e.get('factors') or []
         if abs(sum(float(f.get('weight',0)) for f in factors)-1)>.011: errors.append(f'avaliação {index} com pesos inválidos')
         if any(f.get('value') is None for f in factors): errors.append(f'avaliação {index} preencheu fator sem valor explícito')
@@ -49,8 +58,16 @@ def validate(data):
     if evaluated_beaches!=SURFCASTING_BEACHES: errors.append(f'cobertura de surfcasting incompleta: {sorted(SURFCASTING_BEACHES-evaluated_beaches)}')
     for date in dates:
         if {e['period'] for e in evaluations if e['date']==date}!=PERIODS: errors.append(f'{date} não contém seis períodos')
+        expected={(beach,period,species) for beach in SURFCASTING_BEACHES for period in PERIODS for species in SPECIES}
+        actual={(e['beach_id'],e['period'],e['species']) for e in evaluations if e['date']==date}
+        if actual!=expected: errors.append(f'{date} tem cobertura incompleta por zona/período/espécie')
+        expected_activities={(kind,beach,period,level) for kind,beaches_for_kind in ACTIVITY_BEACHES.items() for beach in beaches_for_kind for period in PERIODS for level in (('iniciante','intermedio','experiente') if kind=='surf' else ('',))}
+        actual_activities={(a['activity'],a['beach_id'],a['period'],a.get('surf_level','')) for a in activities or [] if a['date']==date}
+        if actual_activities!=expected_activities: errors.append(f'{date} tem cobertura incompleta nas modalidades')
+    automation=data.get('automation') or {}; available=automation.get('available_dates')
+    if not isinstance(available,list) or not available or len(available)>16 or set(available)!=dates: errors.append('horizonte disponível não corresponde às avaliações ou excede 16 dias')
     if not data.get('source_registry'): errors.append('source_registry vazio')
-    if data.get('automation',{}).get('human_equivalence_claimed') is not False: errors.append('motor não declara explicitamente ausência de equivalência humana')
+    if automation.get('human_equivalence_claimed') is not False: errors.append('motor não declara explicitamente ausência de equivalência humana')
     return errors
 
 def main():

@@ -2,7 +2,7 @@
 
 Validação executada em 10 de novembro de 2026:
 
-- `python -m unittest discover -s tests -v`: 11 testes aprovados.
+- `python -m unittest discover -s tests -v`: 20 testes aprovados.
 - `python -m py_compile collect_sources_14_spots.py automation/*.py tests/*.py`: aprovado.
 - `node --check app.js`, `collector.js` e `sw.js`: aprovado.
 - Forecast anterior: continua válido no verificador existente e não foi alterado durante os ensaios.

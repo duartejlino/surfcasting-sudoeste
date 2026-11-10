@@ -48,6 +48,14 @@ jobs:
           git push
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
+      - name: Confirmar hora efetiva da publicação
+        if: steps.update.outcome == 'success' && steps.commit.outputs.changed == 'true'
+        run: |
+          python automation/mark_published.py
+          git add status.json data/status.json
+          git commit -m "chore: confirmar publicação automática [skip ci]"
+          git push
+
       - name: Assinalar falha depois de preservar o forecast anterior
         if: steps.update.outcome != 'success'
         run: exit 1

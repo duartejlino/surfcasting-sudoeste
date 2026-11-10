@@ -1,6 +1,6 @@
-const APP={activeActivity:'surfcasting',surfLevel:'intermedio',forecast:null,activityIndex:new Map(),history:[],activityUI:{view:'day',date:null,month:null,period:'AUTO',beach:'ALL',kind:'ALL',surfLevel:'intermedio',selected:new Set()},compareBeachIds:new Set(),selection:{date:null,beach:null,period:'Amanhecer',species:'Geral'},calendar:{view:'timeline',month:null,period:'AUTO',beach:'ALL'}};
+const APP={activeActivity:'surfcasting',surfLevel:'intermedio',forecast:null,forecastSource:'automatic',activityIndex:new Map(),history:[],activityUI:{view:'day',date:null,month:null,period:'AUTO',beach:'ALL',kind:'ALL',surfLevel:'intermedio',selected:new Set()},compareBeachIds:new Set(),selection:{date:null,beach:null,period:'Amanhecer',species:'Geral'},calendar:{view:'timeline',month:null,period:'AUTO',beach:'ALL'}};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const STORAGE_HISTORY='surfcasting_history_v3', STORAGE_FORECAST='surfcasting_forecast_override_v3';
+const STORAGE_HISTORY='surfcasting_history_v3', STORAGE_FORECAST='surfcasting_forecast_override_v3', STORAGE_FORECAST_SOURCE='forecast_source_preference_v1';
 const periods=['Madrugada','Amanhecer','Manhã','Tarde','Anoitecer','Noite'];
 /* Instituto Hidrografico, Tabela de Mares 2026, Volume I, Porto de Sines, Novembro.
    Horas TU+0 (= Portugal continental em novembro), alturas referidas ao zero hidrografico local.
@@ -108,7 +108,8 @@ function sanitizeHistory(rows){return (Array.isArray(rows)?rows:[]).map(h=>({...
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const labelScore=v=>v>=8.5?'Excelente':v>=7.5?'Muito bom':v>=6.5?'Bom':v>=5.5?'Razoável':'Fraco';
 function setStatus(msg){$('#status').textContent=msg}
-async function loadForecast(){let data=null;try{data=await readForecastOverride()}catch(err){console.warn('Previsão guardada indisponível:',err)}if(!data){const r=await fetch('data/forecast.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('forecast.json indisponível');data=await r.json()}validateForecast(data);data=addAdditionalSpotCatalog(enrichForecast(sanitizeForecast(data)));APP.forecast=data;prepareActivityIndex(data);forecastStatus(data);APP.selection.date=pickForecastDate(data);APP.selection.beach=Object.keys(data.beaches)[0];populateSelectors();syncActivityHistoryFields();renderAll();await loadAutomationStatus(data);setStatus('Dados carregados. Abre qualquer nota para ver o raciocínio completo.')}
+function updateForecastSourceUI(){const imported=APP.forecastSource==='imported',label=$('#activeForecastSource'),back=$('#useAutomaticForecast');if(label)label.textContent=imported?'Ativa: previsão importada manualmente':'Ativa: previsão automática publicada';if(back)back.hidden=!imported}
+async function loadForecast(){let automatic=null,imported=null,automaticError=null;try{const r=await fetch('data/forecast.json?ts='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('forecast.json automático indisponível');automatic=await r.json()}catch(error){automaticError=error}try{imported=await readForecastOverride()}catch(err){console.warn('Previsão importada guardada indisponível:',err)}const preferImported=localStorage.getItem(STORAGE_FORECAST_SOURCE)==='imported';let data=preferImported&&imported?imported:automatic;APP.forecastSource=preferImported&&imported?'imported':'automatic';if(!data&&imported){data=imported;APP.forecastSource='imported'}if(!data)throw automaticError||new Error('Nenhuma previsão disponível');validateForecast(data);data=addAdditionalSpotCatalog(enrichForecast(sanitizeForecast(data)));APP.forecast=data;prepareActivityIndex(data);forecastStatus(data);APP.selection.date=pickForecastDate(data);APP.selection.beach=Object.keys(data.beaches)[0];populateSelectors();syncActivityHistoryFields();renderAll();updateForecastSourceUI();await loadAutomationStatus(data);setStatus((APP.forecastSource==='imported'?'Previsão importada ativa. ':'Previsão automática ativa. ')+'Abre qualquer nota para ver o raciocínio completo.')}
 function localPortugal(value){if(!value||!Number.isFinite(Date.parse(value)))return '—';return new Date(value).toLocaleString('pt-PT',{timeZone:'Europe/Lisbon',dateStyle:'short',timeStyle:'short'})}
 async function loadAutomationStatus(forecast){
  const box=$('#automationStatus');if(!box)return;
@@ -146,7 +147,8 @@ function forecastStatus(data){
  const min=ds[0]||'—', max=ds.at(-1)||'—', stamp=Date.parse(data.generated_at);
  const ageHours=(Date.now()-stamp)/3600000, today=localDateISO();
  const old=Number.isFinite(ageHours)&&ageHours>36, out=max<today;
- const msg=out?`Previsão expirada (último dia ${max}). Pede um forecast novo no ChatGPT.`:old?`Previsão com mais de 36 horas (${min} a ${max}). Confirma antes de decidir.`:`Previsão disponível para ${min} a ${max}. Atualizada no ChatGPT em ${new Date(stamp).toLocaleString('pt-PT')}.`;
+ const source=APP.forecastSource==='imported'?'importada manualmente':'automática',gaps=data.automation?.coverage_gaps?.length||0;
+ const msg=out?`Previsão ${source} expirada (último dia ${max}).`:old?`Previsão ${source} com mais de 36 horas (${min} a ${max}). Confirma antes de decidir.`:`Previsão ${source} disponível de ${min} a ${max} (${ds.length} dia${ds.length===1?'':'s'} com cobertura completa). Atualizada em ${new Date(stamp).toLocaleString('pt-PT')}.${gaps?' Foram excluídos períodos/dias com cobertura insuficiente.':''}`;
  const el=$('#manualForecastStatus');if(el){el.textContent=msg;el.classList.toggle('manual-forecast-warning',old||out)}
  $('#dataStamp').textContent=(old||out?'PREVISÃO ANTIGA · ':'Previsão de ')+new Date(stamp).toLocaleDateString('pt-PT');
 }
@@ -231,10 +233,10 @@ $('#forecastFile').onchange=e=>{
       const d=JSON.parse(r.result);validateForecast(d);
       const prepared=addAdditionalSpotCatalog(enrichForecast(sanitizeForecast(d)));
       await writeForecastOverride(prepared);
-      APP.forecast=prepared;prepareActivityIndex(prepared);APP.selection.date=pickForecastDate(prepared);APP.selection.beach=Object.keys(prepared.beaches)[0];
+      localStorage.setItem(STORAGE_FORECAST_SOURCE,'imported');APP.forecastSource='imported';APP.forecast=prepared;prepareActivityIndex(prepared);APP.selection.date=pickForecastDate(prepared);APP.selection.beach=Object.keys(prepared.beaches)[0];
       APP.activityUI.date=null;APP.activityUI.month=null;APP.compareBeachIds.clear();APP.activityUI.selected.clear();
       APP.calendar.month=null;
-      populateSelectors();syncActivityHistoryFields();renderAll();forecastStatus(prepared);
+      populateSelectors();syncActivityHistoryFields();renderAll();forecastStatus(prepared);updateForecastSourceUI();
       setStatus('Previsão importada. O teu histórico de saídas foi preservado.');
     }catch(err){setStatus('Não consegui importar: '+err.message);const el=$('#manualForecastStatus');if(el)el.textContent='Importação falhou: '+err.message}
     finally{e.target.value=''}
@@ -242,6 +244,7 @@ $('#forecastFile').onchange=e=>{
   r.onerror=()=>{setStatus('Não foi possível ler o ficheiro selecionado.');e.target.value=''};
   r.readAsText(f);
 };
+$('#useAutomaticForecast').onclick=()=>{localStorage.setItem(STORAGE_FORECAST_SOURCE,'automatic');location.reload()};
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 
 /* Mar Sudoeste v4 — camadas por atividade, mantendo os forecasts v3 importáveis. */
