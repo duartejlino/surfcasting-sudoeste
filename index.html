@@ -36,12 +36,17 @@
 
 <section id="dashboard" class="panel active-panel">
   <div id="status" class="status">A carregar dados…</div>
+  <div id="automationStatus" class="card automation-status" role="status" aria-live="polite">
+    <div><div class="eyebrow">ATUALIZAÇÃO AUTOMÁTICA</div><h3>A verificar o estado da previsão…</h3></div>
+    <div class="automation-times"><span>Recolha <strong id="automationCollected">—</strong></span><span>Cálculo válido <strong id="automationCalculated">—</strong></span><span>Publicação <strong id="automationPublished">—</strong></span><span>Idade <strong id="automationAge">—</strong></span></div>
+    <p id="automationWarning" class="muted">O estado será carregado juntamente com a previsão.</p>
+  </div>
 <div class="card live-data-box manual-data-box" aria-label="Previsão gerada no ChatGPT">
-    <div><div class="eyebrow">PREVISÃO POR FICHEIRO · SEM API PAGA</div><h3>O ChatGPT analisa. A app apresenta.</h3>
-      <p>Para recolher dados meteorológicos novos das 14 zonas, abre <strong>Atualizar dados → Recolher agora</strong>. Envia o ficheiro de fontes ao ChatGPT para gerar o forecast com as notas e justificações e importa o <code>forecast.json</code> recebido.</p>
-      <p class="muted">A recolha só acontece quando carregas no botão. O cálculo das notas continua a depender da importação do forecast gerado por IA. A app preserva o teu histórico neste dispositivo. Marés oficiais de Sines disponíveis para novembro de 2026; segurança, acessos, visibilidade e regras locais têm sempre de ser confirmados.</p>
+    <div><div class="eyebrow">PREVISÃO AUTOMÁTICA · SEM API PAGA</div><h3>O workflow atualiza. A importação manual continua disponível.</h3>
+      <p>O GitHub Actions recolhe as 14 zonas e calcula um forecast determinístico de seis em seis horas. Podes continuar a usar <strong>Atualizar dados</strong> e a importar um <code>forecast.json</code> analisado no ChatGPT.</p>
+      <p class="muted">O motor automático não afirma equivalência à análise humana e não inventa visibilidade, segurança, peixe ou legalidade. A app preserva o histórico e as importações guardadas neste dispositivo.</p>
     </div>
-    <div class="live-actions"><button type="button" class="primary" id="openCollectorBtn">Recolher dados novos</button><button type="button" class="secondary" id="importForecastMainBtn">Importar forecast.json</button><p id="manualForecastStatus" role="status" class="muted">A verificar a data da previsão guardada…</p></div>
+    <div class="live-actions"><strong id="activeForecastSource">Ativa: previsão automática publicada</strong><button type="button" class="primary" id="openCollectorBtn">Recolher dados novos</button><button type="button" class="secondary" id="importForecastMainBtn">Importar forecast.json</button><button type="button" class="secondary" id="useAutomaticForecast" hidden>Voltar à previsão automática</button><p id="manualForecastStatus" role="status" class="muted">A verificar a data da previsão ativa…</p></div>
   </div>
   <div class="hero card"><div class="eyebrow">MELHOR OPORTUNIDADE</div><h2 id="bestTitle">—</h2><div class="hero-meta"><span id="bestScore" class="score-pill">—</span><span id="bestConfidence" class="confidence-pill">—</span><span id="bestWhen">—</span></div><p id="bestReason"></p><button id="openBestReason" class="link-btn">Ver todo o raciocínio →</button></div>
   <div class="stats-grid"><div class="card stat"><span>Saídas</span><strong id="statTrips">0</strong></div><div class="card stat"><span id="statOutcomeLabel">Capturas</span><strong id="statFish">0</strong></div><div class="card stat"><span>Melhor praia real</span><strong id="statBeach">Sem dados</strong></div><div class="card stat"><span>Melhor período real</span><strong id="statPeriod">Sem dados</strong></div></div>

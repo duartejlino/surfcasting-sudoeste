@@ -11,7 +11,6 @@ import concurrent.futures
 import datetime as dt
 import json
 import os
-import random
 import sys
 import time
 import urllib.error
@@ -19,7 +18,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-BASE = Path(__file__).resolve().parents[1]
+BASE = Path(__file__).resolve().parent
 OUT = BASE / 'data' / 'source_snapshots' / 'latest'
 BEACHES = {
   'santo-andre': (38.11432,-8.79823,'Costa de Santo André'),
@@ -64,6 +63,8 @@ API_WEATHER = 'https://api.open-meteo.com/v1/forecast'
 API_IPMA = 'https://api.ipma.pt/open-data/forecast/oceanography/daily/hp-daily-sea-forecast-day{}.json'
 UTC = dt.timezone.utc
 NOW = lambda: dt.datetime.now(UTC).isoformat(timespec='seconds')
+RETRYABLE_HTTP = {408, 429, 500, 502, 503, 504}
+RETRY_DELAYS = (2, 5, 10)
 
 
 def make_url(endpoint: str, params: dict) -> str:
@@ -72,7 +73,7 @@ def make_url(endpoint: str, params: dict) -> str:
 
 def fetch_json(url: str) -> dict:
     err = None
-    for attempt in range(3):
+    for attempt in range(4):
         try:
             req = urllib.request.Request(url, headers={
                 'User-Agent':'MarSudoeste/1.0 (personal non-commercial forecast research)',
@@ -85,13 +86,14 @@ def fetch_json(url: str) -> dict:
             if not isinstance(data,dict) or data.get('error'):
                 raise ValueError('API: '+str(data.get('reason', 'resposta não é objeto'))[:400])
             return data
-        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError,
-                json.JSONDecodeError) as ex:
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError,
+                ConnectionError, ValueError, json.JSONDecodeError) as ex:
             err=ex
-            if isinstance(ex, urllib.error.HTTPError) and ex.code in (400,401,403,404):
+            retryable = (ex.code in RETRYABLE_HTTP if isinstance(ex, urllib.error.HTTPError)
+                         else isinstance(ex, (urllib.error.URLError, TimeoutError, ConnectionError)))
+            if not retryable or attempt == 3:
                 break
-            if attempt < 2:
-                time.sleep((attempt+1)*1.2 + random.random()*0.3)
+            time.sleep(RETRY_DELAYS[attempt])
     raise RuntimeError(str(err)[:450])
 
 
@@ -165,8 +167,11 @@ def get_weather(coords,fetch=fetch_json, basindata=False):
         data=compact_api(fetch(url))
         if not (data.get('hourly') or {}).get('time'):
             raise ValueError('sem série horária')
+        stat=coverage(data,'precipitation' if basindata else 'wind_speed_10m')
+        if stat['valid_points'] < 12:
+            raise ValueError('menos de 12 horas válidas')
         return {'ok':True,'retrieved_at_utc':NOW(),'request_url':url,'data':data,
-                'coverage':coverage(data,'precipitation' if basindata else 'wind_speed_10m')}
+                'coverage':stat}
     except Exception as ex:return {'ok':False,'retrieved_at_utc':NOW(),'request_url':url,
                                   'error':str(ex)[:450],'data':None}
 
@@ -197,7 +202,7 @@ def get_ipma(d,fetch=fetch_json):
 def collect(fetch=fetch_json):
     start=NOW()
     jobs={}
-    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
         for b,coords in BEACHES.items():
             for model in MODELS:
                 jobs[('model',b,model)]=pool.submit(get_model,b,coords,model,fetch)
@@ -220,7 +225,7 @@ def collect(fetch=fetch_json):
     ipma={str(d):results[('ipma',str(d),None)] for d in range(3)}
     good_weather=sum(int(b['weather']['ok']) for b in beaches.values())
     good_beaches=sum(any(m['ok'] for m in b['marine_models'].values()) for b in beaches.values())
-    if good_weather < 4 or good_beaches < 4:
+    if good_weather < len(BEACHES) or good_beaches < len(BEACHES):
         raise RuntimeError('Falha crítica de recolha: apenas '+str(good_weather)+
                            ' praias com tempo e '+str(good_beaches)+
                            ' com mar; mantenho fotografia anterior sem substituição.')

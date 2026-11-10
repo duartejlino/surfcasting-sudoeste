@@ -245,3 +245,6 @@ main{max-width:none;width:100%;padding:clamp(12px,1.35vw,26px)}
 .collector-guide p{line-height:1.65}
 .collector-guide code{overflow-wrap:anywhere}
 @media(max-width:700px){.collector-intro{display:block}.collector-chip{display:inline-block;margin-top:12px}.collector-flow{grid-template-columns:1fr;gap:7px}.collector-flow>div{padding:9px}.collector-actions{display:grid;grid-template-columns:1fr}.collector-actions button,.collector-download{width:100%}}
+
+/* Estado do workflow automático */
+.automation-status{border-left:4px solid var(--accent);margin-bottom:12px}.automation-status h3{margin:3px 0 10px}.automation-times{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.automation-times span{background:#f3f8f6;border:1px solid var(--border);border-radius:9px;padding:9px;font-size:11px;color:var(--muted)}.automation-times strong{display:block;margin-top:4px;color:var(--text);font-size:13px}.automation-status>p{margin-bottom:0}.automation-alert{border-left-color:#a14436;background:#fff8f5}.automation-partial{border-left-color:#b07b24;background:#fffbf2}@media(max-width:700px){.automation-times{grid-template-columns:repeat(2,minmax(0,1fr))}}
